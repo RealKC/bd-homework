@@ -5,9 +5,14 @@ use sqlx::SqlitePool;
 async fn main() {
     tracing_subscriber::fmt::init();
 
-    let pool = SqlitePool::connect("sqlite:data.sqlite")
+    let pool = SqlitePool::connect("sqlite://data.sqlite?mode=rwc")
         .await
         .expect("Failed to open database");
+
+    sqlx::migrate!()
+        .run(&pool)
+        .await
+        .expect("failed to run migrations");
 
     let app = Router::new().route("/", get(root)).with_state(pool);
 
