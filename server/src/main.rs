@@ -1,4 +1,5 @@
 use axum::{routing::get, Router};
+use error::RouteError;
 use sqlx::SqlitePool;
 
 mod auth;
@@ -22,6 +23,7 @@ async fn main() {
         .route("/", get(root))
         .route("/books", get(books::books))
         .nest("/auth", auth::router(pool.clone()))
+        .fallback(fallback)
         .with_state(pool);
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
@@ -30,4 +32,8 @@ async fn main() {
 
 async fn root() -> &'static str {
     "Hello BD project"
+}
+
+async fn fallback() -> RouteError {
+    RouteError::new_not_found()
 }
