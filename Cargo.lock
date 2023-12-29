@@ -57,7 +57,10 @@ version = "0.1.0"
 dependencies = [
  "gtk4",
  "libadwaita",
+ "once_cell",
  "schema",
+ "serde",
+ "serde_json",
  "soup3",
 ]
 

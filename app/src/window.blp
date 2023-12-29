@@ -6,7 +6,7 @@ template $LibWindow : Gtk.ApplicationWindow {
 
     titlebar: Adw.HeaderBar {};
 
-    Gtk.Button {
-        tooltip-text: 'Hello Adwaita';
+    $LibLoginPage {
+        soup_session: bind template.soup_session;
     }
 }

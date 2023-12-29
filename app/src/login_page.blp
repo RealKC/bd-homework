@@ -1,0 +1,91 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $LibLoginPage : Gtk.Widget {
+    layout-manager: Gtk.BoxLayout {
+        orientation: vertical;
+        spacing: 4;
+    };
+
+    Gtk.Paned {
+        orientation: horizontal;
+        shrink-start-child: false;
+        shrink-end-child: false;
+        vexpand: true;
+
+        Gtk.Frame {
+            width-request: 200;
+
+            Gtk.Box {
+                margin-top: 12;
+                margin-bottom: 12;
+                margin-start: 6;
+                margin-end: 6;
+                spacing: 6;
+
+                orientation: vertical;
+
+                Gtk.Label {
+                    label: "Log in";
+                    width-request: 300;
+                    styles ["title-2"]
+                }
+
+                Adw.EntryRow login_email {
+                    input-purpose: email;
+                    title: "Email";
+                }
+
+                Adw.PasswordEntryRow login_password {
+                    title: "Parolă";
+                }
+
+                Gtk.Button {
+                    label: "Log in";
+                    styles ["suggested-action"]
+
+                    clicked => $on_login_clicked() swapped;
+                }
+            }
+
+        }
+        Gtk.Frame {
+            width-request: 200;
+
+            Gtk.Box {
+                margin-top: 12;
+                margin-bottom: 12;
+                margin-start: 6;
+                margin-end: 6;
+                orientation: vertical;
+                spacing: 6;
+
+                Gtk.Label {
+                    label: "Creează cont";
+                    styles ["title-2"]
+                }
+
+                Adw.EntryRow signup_name {
+                    input-purpose: name;
+                    title: "Nume";
+                }
+
+                Adw.EntryRow signup_email {
+                    input-purpose: email;
+                    title: "Email";
+                }
+
+                Adw.PasswordEntryRow signup_password {
+                    title: "Parolă";
+                }
+
+                Gtk.Button {
+                    label: "Creează cont";
+
+                    clicked => $on_signup_clicked() swapped;
+                }
+            }
+        }
+
+   }
+}

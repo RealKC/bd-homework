@@ -17,9 +17,15 @@ mod imp {
     use adw::{glib, prelude::*, subclass::prelude::*};
     use gtk::CompositeTemplate;
 
-    #[derive(Default, Debug, CompositeTemplate)]
+    use crate::{http::Session, login_page::LoginPage};
+
+    #[derive(Default, Debug, CompositeTemplate, glib::Properties)]
+    #[properties(wrapper_type = super::LibWindow)]
     #[template(file = "src/window.blp")]
-    pub struct LibWindow {}
+    pub struct LibWindow {
+        #[property(get)]
+        soup_session: Session,
+    }
 
     #[glib::object_subclass]
     impl ObjectSubclass for LibWindow {
@@ -28,6 +34,8 @@ mod imp {
         type ParentType = gtk::ApplicationWindow;
 
         fn class_init(klass: &mut Self::Class) {
+            LoginPage::ensure_type();
+
             klass.bind_template();
         }
 
@@ -36,6 +44,7 @@ mod imp {
         }
     }
 
+    #[glib::derived_properties]
     impl ObjectImpl for LibWindow {}
 
     impl WidgetImpl for LibWindow {}
