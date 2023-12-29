@@ -1,0 +1,86 @@
+{
+  "db_name": "SQLite",
+  "query": "\nSELECT\nb.book_id,\nb.title,\nb.publish_date,\nb.publisher,\nb.count,\nb.synopsis,\nb.language,\na.author_id,\na.name,\na.date_of_birth,\na.date_of_death,\na.description\n\nFROM Books b JOIN Authors a ON b.author_id = a.author_id;\n    ",
+  "describe": {
+    "columns": [
+      {
+        "name": "book_id",
+        "ordinal": 0,
+        "type_info": "Int64"
+      },
+      {
+        "name": "title",
+        "ordinal": 1,
+        "type_info": "Text"
+      },
+      {
+        "name": "publish_date",
+        "ordinal": 2,
+        "type_info": "Int64"
+      },
+      {
+        "name": "publisher",
+        "ordinal": 3,
+        "type_info": "Text"
+      },
+      {
+        "name": "count",
+        "ordinal": 4,
+        "type_info": "Int64"
+      },
+      {
+        "name": "synopsis",
+        "ordinal": 5,
+        "type_info": "Text"
+      },
+      {
+        "name": "language",
+        "ordinal": 6,
+        "type_info": "Text"
+      },
+      {
+        "name": "author_id",
+        "ordinal": 7,
+        "type_info": "Int64"
+      },
+      {
+        "name": "name",
+        "ordinal": 8,
+        "type_info": "Text"
+      },
+      {
+        "name": "date_of_birth",
+        "ordinal": 9,
+        "type_info": "Int64"
+      },
+      {
+        "name": "date_of_death",
+        "ordinal": 10,
+        "type_info": "Int64"
+      },
+      {
+        "name": "description",
+        "ordinal": 11,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      false
+    ]
+  },
+  "hash": "51c49b2bf054e8f13e7a31476504c966c51fda4ec5b680cca945e079011d25df"
+}
