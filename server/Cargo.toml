@@ -8,4 +8,8 @@ axum = "0.7.2"
 tokio = { version = "1.35.1", features = [ "full" ] }
 tracing = "0.1.40"
 tracing-subscriber = "0.3.0"
+schema.workspace = true
+serde.workspace = true
+serde_json.workspace = true
 sqlx = { version = "0.7", features = [ "runtime-tokio", "tls-rustls", "sqlite" ] }
+anyhow = "1.0.77"
