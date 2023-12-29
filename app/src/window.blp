@@ -1,0 +1,12 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $LibWindow : Gtk.ApplicationWindow {
+    title: "Biblioteca";
+
+    titlebar: Adw.HeaderBar {};
+
+    Gtk.Button {
+        tooltip-text: 'Hello Adwaita';
+    }
+}

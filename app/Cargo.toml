@@ -4,3 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+adw = { version = "0.5.3", package = "libadwaita", features = ["v1_4"] }
+gtk = { version = "0.7.3", package = "gtk4", features = ["v4_8", "blueprint"] }
+schema.workspace = true
+soup = { version = "0.5.0", package = "soup3" }
