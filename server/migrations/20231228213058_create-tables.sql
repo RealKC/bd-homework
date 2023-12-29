@@ -15,6 +15,7 @@ CREATE TABLE Books(
     publisher TEXT NOT NULL,
     count INTEGER NOT NULL CHECK (count >= 0),
     synopsis TEXT NOT NULL,
+    language TEXT NOT NULL CHECK (language IN ('ro', 'en')),
     FOREIGN KEY (author_id) REFERENCES Authors(author_id)
 ) STRICT;
 
@@ -22,7 +23,7 @@ CREATE TABLE Users(
     user_id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
     type INTEGER NOT NULL CHECK (type = 1 OR type = 2), -- regular user = 1, librarian = 2
-    email TEXT NOT NULL,
+    email TEXT UNIQUE NOT NULL,
     password TEXT NOT NULL
 ) STRICT;
 
