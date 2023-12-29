@@ -1,5 +1,6 @@
 //! This crate contains type definitions useful both on the client and server
 
+pub mod auth;
 pub mod books;
 
 /// Type alias that corresponds to INTEGER in sqlite

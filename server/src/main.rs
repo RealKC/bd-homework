@@ -1,6 +1,7 @@
 use axum::{routing::get, Router};
 use sqlx::SqlitePool;
 
+mod auth;
 mod books;
 mod error;
 
@@ -20,6 +21,7 @@ async fn main() {
     let app = Router::new()
         .route("/", get(root))
         .route("/books", get(books::books))
+        .nest("/auth", auth::router(pool.clone()))
         .with_state(pool);
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
