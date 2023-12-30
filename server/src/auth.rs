@@ -54,6 +54,10 @@ async fn create_account(
     State(pool): State<SqlitePool>,
     Json(data): Json<CreateAccount>,
 ) -> Result<Json<i64>, RouteError> {
+    if data.email.is_empty() || data.name.is_empty() || data.password.is_empty() {
+        return Err(RouteError::new_bad_request());
+    }
+
     let salt = SaltString::generate(&mut OsRng);
     let argon2 = Argon2::default();
     let password_hash = argon2
