@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{Integer, Text};
+use crate::{session, Integer, Text};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Author {
@@ -21,4 +21,15 @@ pub struct Book {
     pub count: Integer,
     pub synopsis: Text,
     pub can_be_borrowed: bool,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct BorrowRequest {
+    pub cookie: session::Cookie,
+    pub book_id: Integer,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct BorrowReply {
+    pub already_borrowed: bool,
 }

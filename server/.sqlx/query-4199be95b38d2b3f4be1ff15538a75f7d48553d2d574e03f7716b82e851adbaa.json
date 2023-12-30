@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "\nSELECT COUNT(*) as \"times_borrowed\"\nFROM Books b JOIN Borrows bo ON b.book_id = bo.book_id\n             JOIN Users   u  ON bo.user_id = u.user_id\nWHERE b.book_id = ? AND u.user_id = ?;\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "times_borrowed",
+        "ordinal": 0,
+        "type_info": "Int"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "4199be95b38d2b3f4be1ff15538a75f7d48553d2d574e03f7716b82e851adbaa"
+}

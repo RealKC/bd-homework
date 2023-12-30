@@ -14,7 +14,7 @@ mod imp {
         glib::{g_warning, BoxedAnyObject, MainContext},
         CompositeTemplate,
     };
-    use schema::books::Book;
+    use schema::books::{Book, BorrowReply, BorrowRequest};
 
     use crate::{
         http::{Session, SessionCookie},
@@ -58,6 +58,10 @@ mod imp {
     impl UserView {
         fn soup_session(&self) -> &Session {
             self.soup_session.get().unwrap()
+        }
+
+        fn cookie(&self) -> SessionCookie {
+            self.session_cookie.borrow().as_ref().cloned().unwrap()
         }
 
         #[template_callback]
@@ -175,6 +179,26 @@ mod imp {
 
         async fn borrow_book(&self, book: Book) {
             println!("time to borrow: {book:?}");
+
+            let request = BorrowRequest {
+                cookie: self.cookie().cookie().clone(),
+                book_id: book.book_id,
+            };
+
+            let reply = self
+                .soup_session()
+                .post::<BorrowReply>(request, "/borrow")
+                .await;
+
+            match reply {
+                Ok(reply) => {
+                    if reply.already_borrowed {
+                        self.obj()
+                            .show_toast_msg("Nu poți împrumuta aceeași carte de mai multe ori");
+                    }
+                }
+                Err(e) => g_warning!("biblioteca", "we got the error: {}", e),
+            }
         }
     }
 }

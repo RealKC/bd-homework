@@ -7,5 +7,11 @@
             "name": "database",
             "database": "${workspaceFolder:bd-project}/server/data.sqlite"
         }
-    ]
+    ],
+    "sqltools.formatLanguages": [],
+    "[sql]": {
+        "editor.formatOnSave": false,
+        "editor.formatOnPaste": false,
+        "editor.formatOnType": false
+    }
 }

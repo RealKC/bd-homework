@@ -1,4 +1,7 @@
-use axum::{routing::get, Router};
+use axum::{
+    routing::{get, post},
+    Router,
+};
 use error::RouteError;
 use sqlx::SqlitePool;
 
@@ -22,6 +25,7 @@ async fn main() {
     let app = Router::new()
         .route("/", get(root))
         .route("/books", get(books::books))
+        .route("/borrow", post(books::borrow))
         .nest("/auth", auth::router(pool.clone()))
         .fallback(fallback)
         .with_state(pool);

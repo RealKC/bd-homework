@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "\nSELECT b.count > (SELECT COUNT(*) FROM Borrows bo WHERE bo.book_id = b.book_id) AS \"can_be_borrowed!: bool\"\nFROM Books b\nWHERE b.book_id = ?;\n    ",
+  "describe": {
+    "columns": [
+      {
+        "name": "can_be_borrowed!: bool",
+        "ordinal": 0,
+        "type_info": "Null"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "c2dedfba82b8d87e766baedd81c35053c0ad6474c602183d62c09651d3ffab22"
+}
