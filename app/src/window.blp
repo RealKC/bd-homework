@@ -6,7 +6,10 @@ template $LibWindow : Gtk.ApplicationWindow {
 
     titlebar: Adw.HeaderBar {};
 
-    $LibLoginPage {
-        soup_session: bind template.soup_session;
+    Adw.ToastOverlay toast_overlay {
+        $LibLoginPage {
+            soup_session: bind template.soup_session;
+        }
     }
+
 }

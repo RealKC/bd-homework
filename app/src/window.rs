@@ -1,4 +1,9 @@
-use adw::{gio, glib};
+use adw::{
+    gio,
+    glib::{self, Cast, IsA},
+    prelude::*,
+    subclass::prelude::*,
+};
 
 glib::wrapper! {
     pub struct LibWindow(ObjectSubclass<imp::LibWindow>)
@@ -10,6 +15,37 @@ glib::wrapper! {
 impl LibWindow {
     pub fn new(app: &adw::Application) -> Self {
         glib::Object::builder().property("application", app).build()
+    }
+
+    fn show_toast(&self, toast: adw::Toast) {
+        self.imp().toast_overlay.add_toast(toast);
+    }
+}
+
+pub trait ShowToastExt {
+    fn show_toast(&self, toast: adw::Toast);
+
+    fn show_toast_msg(&self, msg: &str) {
+        self.show_toast(adw::Toast::new(msg));
+    }
+}
+
+impl<T> ShowToastExt for T
+where
+    T: IsA<gtk::Widget>,
+{
+    fn show_toast(&self, toast: adw::Toast) {
+        let mut widget: gtk::Widget = self.clone().upcast();
+        while let Some(parent) = widget.parent() {
+            widget = parent;
+
+            if let Some(lib_window) = widget.downcast_ref::<LibWindow>() {
+                lib_window.show_toast(toast);
+                return;
+            }
+        }
+
+        panic!("ShowToastExt requires that one widget in our hierarchy be a LibWindow, but none was found");
     }
 }
 
@@ -23,6 +59,9 @@ mod imp {
     #[properties(wrapper_type = super::LibWindow)]
     #[template(file = "src/window.blp")]
     pub struct LibWindow {
+        #[template_child]
+        pub(super) toast_overlay: TemplateChild<adw::ToastOverlay>,
+
         #[property(get)]
         soup_session: Session,
     }
