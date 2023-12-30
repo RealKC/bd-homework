@@ -12,7 +12,7 @@ mod imp {
     use gtk::CompositeTemplate;
     use schema::auth::{CreateAccount, Login};
 
-    use crate::http::Session;
+    use crate::{http::Session, window::ShowToastExt as _};
 
     #[derive(Default, Debug, CompositeTemplate, glib::Properties)]
     #[properties(wrapper_type = super::LoginPage)]
@@ -71,10 +71,12 @@ mod imp {
             let id = self
                 .soup_session()
                 .post::<i64>(request, "/auth/login")
-                .await
-                .unwrap();
+                .await;
 
-            println!("our id is: {id}");
+            match id {
+                Ok(id) => println!("our id is: {id}"),
+                Err(_) => self.obj().show_toast_msg("Autentificare eșuată"),
+            }
         }
 
         #[template_callback]
@@ -88,10 +90,12 @@ mod imp {
             let id = self
                 .soup_session()
                 .post::<i64>(request, "/auth/create-account")
-                .await
-                .unwrap();
+                .await;
 
-            println!("our id is: {id}");
+            match id {
+                Ok(id) => println!("our id is: {id}"),
+                Err(_) => self.obj().show_toast_msg("Nu s-a putut creea contul"),
+            }
         }
     }
 }
