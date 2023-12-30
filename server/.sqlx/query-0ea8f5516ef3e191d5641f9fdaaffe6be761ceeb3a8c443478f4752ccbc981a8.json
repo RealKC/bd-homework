@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "\nSELECT\nb.book_id, b.title, b.publish_date, b.publisher, b.count, b.synopsis, b.language,\na.author_id, a.name, a.date_of_birth, a.date_of_death, a.description\nFROM Books b JOIN Authors a ON b.author_id = a.author_id;\n",
+  "query": "\nSELECT\nb.book_id, b.title, b.publish_date, b.publisher, b.count, b.synopsis, b.language,\na.author_id, a.name, a.date_of_birth, a.date_of_death, a.description,\nb.count > (SELECT COUNT(*) FROM Borrows bo WHERE bo.book_id = b.book_id) AS \"can_be_borrowed\"\nFROM Books b JOIN Authors a ON b.author_id = a.author_id;\n",
   "describe": {
     "columns": [
       {
@@ -62,16 +62,18 @@
         "name": "description",
         "ordinal": 11,
         "type_info": "Text"
+      },
+      {
+        "name": "can_be_borrowed",
+        "ordinal": 12,
+        "type_info": "Int"
       }
     ],
     "parameters": {
       "Right": 0
     },
     "nullable": [
-      false,
-      false,
-      false,
-      false,
+      true,
       false,
       false,
       false,
@@ -79,8 +81,12 @@
       false,
       false,
       true,
-      false
+      false,
+      false,
+      true,
+      false,
+      null
     ]
   },
-  "hash": "f1b77afe9c45d6eca0f9b92dc677f75968c69c2a49ff0ae9dd96abf5b044ed95"
+  "hash": "0ea8f5516ef3e191d5641f9fdaaffe6be761ceeb3a8c443478f4752ccbc981a8"
 }

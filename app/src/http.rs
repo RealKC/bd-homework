@@ -60,6 +60,37 @@ impl Session {
             Ok(serde_json::from_slice(&raw_response).map_err(Error::Deserialization)?)
         }
     }
+
+    pub async fn get<Res: DeserializeOwned>(&self, endpoint: &str) -> Result<Res, Error> {
+        let uri = endpoint_to_uri(endpoint);
+        let msg = Message::new("GET", &uri).unwrap_or_else(|err| {
+            panic!("post: '{endpoint}' does not make a valid URI (derived URI: '{uri}'): {err}")
+        });
+
+        let raw_response = self
+            .0
+            .send_and_read_future(&msg, glib::Priority::DEFAULT)
+            .await
+            .map_err(Error::Network)?;
+
+        if msg.status_code() >= 400 {
+            let json_object: JsonObject =
+                serde_json::from_slice(&raw_response).map_err(Error::Deserialization)?;
+            Err(Error::Api {
+                status: msg.status(),
+                status_code: msg.status_code(),
+                msg: match json_object.as_object() {
+                    Some(object) => object
+                        .get("error")
+                        .map(|msg| msg.to_string())
+                        .unwrap_or_else(|| "Unknown error".to_string()),
+                    _ => json_object.to_string(),
+                },
+            })
+        } else {
+            Ok(serde_json::from_slice(&raw_response).map_err(Error::Deserialization)?)
+        }
+    }
 }
 
 #[derive(thiserror::Error, Debug)]

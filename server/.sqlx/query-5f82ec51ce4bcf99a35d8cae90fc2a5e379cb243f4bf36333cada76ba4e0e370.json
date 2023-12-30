@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "\nINSERT INTO Users(name, type, email, password) VALUES (?, 1, ?, ?)\nRETURNING user_id, type;\n",
+  "describe": {
+    "columns": [
+      {
+        "name": "user_id",
+        "ordinal": 0,
+        "type_info": "Int64"
+      },
+      {
+        "name": "type",
+        "ordinal": 1,
+        "type_info": "Int64"
+      }
+    ],
+    "parameters": {
+      "Right": 3
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "5f82ec51ce4bcf99a35d8cae90fc2a5e379cb243f4bf36333cada76ba4e0e370"
+}

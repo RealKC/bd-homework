@@ -2,7 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{Integer, Text};
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Author {
     pub author_id: Integer,
     pub name: Text,
@@ -11,7 +11,7 @@ pub struct Author {
     pub description: Text,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Book {
     pub book_id: Integer,
     pub title: Text,
@@ -20,4 +20,5 @@ pub struct Book {
     pub publisher: Text,
     pub count: Integer,
     pub synopsis: Text,
+    pub can_be_borrowed: bool,
 }

@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "\nSELECT user_id, password\nFROM Users\nWHERE email = ?\n    ",
+  "query": "\nSELECT user_id, type, password\nFROM Users\nWHERE email = ?\n    ",
   "describe": {
     "columns": [
       {
@@ -9,8 +9,13 @@
         "type_info": "Int64"
       },
       {
-        "name": "password",
+        "name": "type",
         "ordinal": 1,
+        "type_info": "Int64"
+      },
+      {
+        "name": "password",
+        "ordinal": 2,
         "type_info": "Text"
       }
     ],
@@ -19,8 +24,9 @@
     },
     "nullable": [
       true,
+      false,
       false
     ]
   },
-  "hash": "e72ce1fd758f597719ab3ee0b1efdcb341608c998ec56aaea3ad67ae76679ded"
+  "hash": "813a7e5b52aeb100c4bfd904b77649ca95982f62b82a11bd47d7fe392dbbf2bf"
 }

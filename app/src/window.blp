@@ -4,8 +4,6 @@ using Adw 1;
 template $LibWindow : Gtk.ApplicationWindow {
     title: "Biblioteca";
 
-    titlebar: Adw.HeaderBar {};
-
     Adw.ToastOverlay toast_overlay {
         Gtk.Stack stack {
             Gtk.StackPage {
@@ -19,6 +17,7 @@ template $LibWindow : Gtk.ApplicationWindow {
             Gtk.StackPage {
                 name: "user-view";
                 child: $LibUserView {
+                    soup_session: bind template.soup_session;
                     session_cookie: bind template.session_cookie;
                 };
             }

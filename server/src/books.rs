@@ -9,7 +9,8 @@ pub async fn books(State(pool): State<SqlitePool>) -> Result<Json<Vec<Book>>, Ro
         r#"
 SELECT
 b.book_id, b.title, b.publish_date, b.publisher, b.count, b.synopsis, b.language,
-a.author_id, a.name, a.date_of_birth, a.date_of_death, a.description
+a.author_id, a.name, a.date_of_birth, a.date_of_death, a.description,
+b.count > (SELECT COUNT(*) FROM Borrows bo WHERE bo.book_id = b.book_id) AS "can_be_borrowed"
 FROM Books b JOIN Authors a ON b.author_id = a.author_id;
 "#
     )
@@ -18,10 +19,10 @@ FROM Books b JOIN Authors a ON b.author_id = a.author_id;
     .http_internal_error("Failed to fetch book information")?
     .into_iter()
     .map(|record| Book {
-        book_id: record.book_id,
+        book_id: record.book_id.unwrap(),
         title: record.title,
         author: Author {
-            author_id: record.author_id,
+            author_id: record.author_id.unwrap(),
             name: record.name,
             date_of_birth: record.date_of_birth,
             date_of_death: record.date_of_death,
@@ -31,6 +32,7 @@ FROM Books b JOIN Authors a ON b.author_id = a.author_id;
         publisher: record.publisher,
         count: record.count,
         synopsis: record.synopsis,
+        can_be_borrowed: record.can_be_borrowed.map(|c| c != 0).unwrap_or(false),
     })
     .collect::<Vec<_>>();
 
