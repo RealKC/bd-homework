@@ -3,7 +3,7 @@ use argon2::{
     Argon2, PasswordHash, PasswordHasher, PasswordVerifier,
 };
 use axum::{extract::State, http::StatusCode, routing::post, Json, Router};
-use schema::auth::{CreateAccount, Login};
+use schema::auth::{CreateAccount, Login, LoginReply};
 use sqlx::SqlitePool;
 
 use crate::error::{IntoRouteError, RouteError};
@@ -18,10 +18,10 @@ pub fn router(state: SqlitePool) -> Router<SqlitePool> {
 async fn login(
     State(pool): State<SqlitePool>,
     Json(data): Json<Login>,
-) -> Result<Json<i64>, RouteError> {
-    let user = sqlx::query!(
+) -> Result<Json<LoginReply>, RouteError> {
+    let record = sqlx::query!(
         "
-SELECT user_id, password
+SELECT user_id, type, password
 FROM Users
 WHERE email = ?
     ",
@@ -31,7 +31,7 @@ WHERE email = ?
     .await
     .http_error("No account with given email", StatusCode::NOT_FOUND)?;
 
-    if let Some(user) = user {
+    if let Some(user) = record {
         let parsed_hash = PasswordHash::new(&user.password)
             .http_status_error(StatusCode::INTERNAL_SERVER_ERROR)?;
         let password_is_valid = Argon2::default()
@@ -41,7 +41,10 @@ WHERE email = ?
         if password_is_valid {
             tracing::info!("Succesful login");
 
-            Ok(Json(user.user_id.unwrap()))
+            Ok(Json(LoginReply {
+                id: user.user_id.unwrap(),
+                kind: user.r#type,
+            }))
         } else {
             Err(RouteError::new_unauthorized())
         }
@@ -53,7 +56,7 @@ WHERE email = ?
 async fn create_account(
     State(pool): State<SqlitePool>,
     Json(data): Json<CreateAccount>,
-) -> Result<Json<i64>, RouteError> {
+) -> Result<Json<LoginReply>, RouteError> {
     if data.email.is_empty() || data.name.is_empty() || data.password.is_empty() {
         return Err(RouteError::new_bad_request());
     }
@@ -65,10 +68,10 @@ async fn create_account(
         .http_status_error(StatusCode::INTERNAL_SERVER_ERROR)?
         .to_string();
 
-    let user_id = sqlx::query!(
+    let record = sqlx::query!(
         "
 INSERT INTO Users(name, type, email, password) VALUES (?, 1, ?, ?)
-RETURNING user_id;
+RETURNING user_id, type;
 ",
         data.name,
         data.email,
@@ -78,5 +81,8 @@ RETURNING user_id;
     .await
     .http_status_error(StatusCode::INTERNAL_SERVER_ERROR)?;
 
-    Ok(Json(user_id.user_id))
+    Ok(Json(LoginReply {
+        id: record.user_id,
+        kind: record.r#type,
+    }))
 }

@@ -7,8 +7,21 @@ template $LibWindow : Gtk.ApplicationWindow {
     titlebar: Adw.HeaderBar {};
 
     Adw.ToastOverlay toast_overlay {
-        $LibLoginPage {
-            soup_session: bind template.soup_session;
+        Gtk.Stack stack {
+            Gtk.StackPage {
+                name: "login";
+                child: $LibLoginPage {
+                    soup_session: bind template.soup_session;
+                    session_cookie: bind template.session_cookie bidirectional;
+                };
+            }
+
+            Gtk.StackPage {
+                name: "user-view";
+                child: $LibUserView {
+                    session_cookie: bind template.session_cookie;
+                };
+            }
         }
     }
 

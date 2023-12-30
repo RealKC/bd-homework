@@ -75,3 +75,27 @@ pub enum Error {
     #[error("Encountered a deserialization error: {0}")]
     Deserialization(serde_json::Error),
 }
+
+#[derive(glib::Boxed, Clone, Debug, Default)]
+#[boxed_type(name = "LibSessionCookie", nullable)]
+pub struct SessionCookie {
+    cookie: schema::session::Cookie,
+    user_type: i64,
+}
+
+impl SessionCookie {
+    pub fn new(id: i64, password: String, user_type: i64) -> Self {
+        Self {
+            cookie: schema::session::Cookie { id, password },
+            user_type,
+        }
+    }
+
+    pub fn cookie(&self) -> &schema::session::Cookie {
+        &self.cookie
+    }
+
+    pub fn user_type(&self) -> i64 {
+        self.user_type
+    }
+}

@@ -6,13 +6,20 @@ glib::wrapper! {
 }
 
 mod imp {
-    use std::cell::OnceCell;
+    use std::cell::{OnceCell, RefCell};
 
-    use adw::{glib, prelude::*, subclass::prelude::*};
+    use adw::{
+        glib::{self, g_warning},
+        prelude::*,
+        subclass::prelude::*,
+    };
     use gtk::CompositeTemplate;
-    use schema::auth::{CreateAccount, Login};
+    use schema::auth::{CreateAccount, Login, LoginReply};
 
-    use crate::{http::Session, window::ShowToastExt as _};
+    use crate::{
+        http::{Session, SessionCookie},
+        window::ShowToastExt as _,
+    };
 
     #[derive(Default, Debug, CompositeTemplate, glib::Properties)]
     #[properties(wrapper_type = super::LoginPage)]
@@ -32,6 +39,8 @@ mod imp {
 
         #[property(get, set)]
         soup_session: OnceCell<Session>,
+        #[property(get, set)]
+        session_cookie: RefCell<Option<SessionCookie>>,
     }
 
     #[glib::object_subclass]
@@ -63,37 +72,48 @@ mod imp {
 
         #[template_callback]
         async fn on_login_clicked(&self, _: gtk::Button) {
+            let password = self.login_password.text().to_string();
             let request = Login {
                 email: self.login_email.text().to_string(),
-                password: self.login_password.text().to_string(),
+                password: password.clone(),
             };
 
-            let id = self
+            let reply = self
                 .soup_session()
-                .post::<i64>(request, "/auth/login")
+                .post::<LoginReply>(request, "/auth/login")
                 .await;
 
-            match id {
-                Ok(id) => println!("our id is: {id}"),
-                Err(_) => self.obj().show_toast_msg("Autentificare eșuată"),
+            match reply {
+                Ok(reply) => {
+                    self.obj()
+                        .set_session_cookie(SessionCookie::new(reply.id, password, reply.kind));
+                }
+                Err(err) => {
+                    g_warning!("biblioteca", "login returned an error: {}", err);
+                    self.obj().show_toast_msg("Autentificare eșuată");
+                }
             }
         }
 
         #[template_callback]
         async fn on_signup_clicked(&self, _: gtk::Button) {
+            let password = self.signup_password.text().to_string();
             let request = CreateAccount {
                 name: self.signup_name.text().to_string(),
                 email: self.signup_email.text().to_string(),
-                password: self.signup_password.text().to_string(),
+                password: password.clone(),
             };
 
-            let id = self
+            let reply = self
                 .soup_session()
-                .post::<i64>(request, "/auth/create-account")
+                .post::<LoginReply>(request, "/auth/create-account")
                 .await;
 
-            match id {
-                Ok(id) => println!("our id is: {id}"),
+            match reply {
+                Ok(reply) => {
+                    self.obj()
+                        .set_session_cookie(SessionCookie::new(reply.id, password, reply.kind));
+                }
                 Err(_) => self.obj().show_toast_msg("Nu s-a putut creea contul"),
             }
         }

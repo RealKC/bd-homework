@@ -3,6 +3,7 @@ use window::LibWindow;
 
 mod http;
 mod login_page;
+mod user_view;
 mod window;
 
 fn main() -> glib::ExitCode {

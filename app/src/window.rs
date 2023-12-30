@@ -50,10 +50,17 @@ where
 }
 
 mod imp {
+    use std::cell::RefCell;
+
     use adw::{glib, prelude::*, subclass::prelude::*};
     use gtk::CompositeTemplate;
+    use schema::NORMAL_USER;
 
-    use crate::{http::Session, login_page::LoginPage};
+    use crate::{
+        http::{Session, SessionCookie},
+        login_page::LoginPage,
+        user_view::UserView,
+    };
 
     #[derive(Default, Debug, CompositeTemplate, glib::Properties)]
     #[properties(wrapper_type = super::LibWindow)]
@@ -61,9 +68,13 @@ mod imp {
     pub struct LibWindow {
         #[template_child]
         pub(super) toast_overlay: TemplateChild<adw::ToastOverlay>,
+        #[template_child]
+        stack: TemplateChild<gtk::Stack>,
 
         #[property(get)]
         soup_session: Session,
+        #[property(get, set)]
+        session_cookie: RefCell<Option<SessionCookie>>,
     }
 
     #[glib::object_subclass]
@@ -74,6 +85,7 @@ mod imp {
 
         fn class_init(klass: &mut Self::Class) {
             LoginPage::ensure_type();
+            UserView::ensure_type();
 
             klass.bind_template();
         }
@@ -84,7 +96,30 @@ mod imp {
     }
 
     #[glib::derived_properties]
-    impl ObjectImpl for LibWindow {}
+    impl ObjectImpl for LibWindow {
+        fn constructed(&self) {
+            self.parent_constructed();
+
+            self.obj()
+                .connect_session_cookie_notify(|this| this.imp().session_cookie_changed());
+        }
+    }
+
+    impl LibWindow {
+        fn session_cookie(&self) -> SessionCookie {
+            self.obj().session_cookie().unwrap()
+        }
+
+        fn session_cookie_changed(&self) {
+            let user_type = self.session_cookie().user_type();
+
+            println!("changed");
+
+            if user_type == NORMAL_USER {
+                self.stack.set_visible_child_name("user-view");
+            }
+        }
+    }
 
     impl WidgetImpl for LibWindow {}
     impl WindowImpl for LibWindow {}
