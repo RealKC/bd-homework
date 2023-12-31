@@ -133,43 +133,46 @@ mod imp {
             }
         }
 
+        #[template_callback]
+        fn on_setup_label(&self, list_item: &gtk::ListItem, _: &gtk::SignalListItemFactory) {
+            list_item.set_child(Some(&gtk::Label::new(None)));
+        }
+
+        fn with_book_from_list_item<F>(&self, list_item: &gtk::ListItem, f: F)
+        where
+            F: Fn(&Book),
+        {
+            if let Some(object) = list_item.item().and_downcast::<glib::BoxedAnyObject>() {
+                if let Ok(book) = object.try_borrow::<Book>() {
+                    f(&book);
+                } else if let Ok(borrowed_book) = object.try_borrow::<BorrowedBook>() {
+                    f(&self.book_for_id(borrowed_book.book_id));
+                }
+            }
+        }
+
         // --- ALL BOOKS VIEW ---
 
         #[template_callback]
-        fn on_setup_title_all(&self, list_item: &gtk::ListItem, _: &gtk::SignalListItemFactory) {
-            list_item.set_child(Some(&gtk::Label::new(None)));
-        }
-
-        #[template_callback]
-        fn on_bind_title_all(&self, list_item: &gtk::ListItem, _: &gtk::SignalListItemFactory) {
-            if let Some(book) = list_item.item().and_downcast::<glib::BoxedAnyObject>() {
+        fn on_bind_title(&self, list_item: &gtk::ListItem, _: &gtk::SignalListItemFactory) {
+            self.with_book_from_list_item(list_item, |book| {
                 list_item
                     .child()
                     .and_downcast::<gtk::Label>()
                     .unwrap()
-                    .set_label(&book.borrow::<Book>().title);
-            }
+                    .set_label(&book.title)
+            });
         }
 
         #[template_callback]
-        fn on_setup_author_all(&self, list_item: &gtk::ListItem, _: &gtk::SignalListItemFactory) {
-            list_item.set_child(Some(&gtk::Label::new(None)));
-        }
-
-        #[template_callback]
-        fn on_bind_author_all(&self, list_item: &gtk::ListItem, _: &gtk::SignalListItemFactory) {
-            if let Some(book) = list_item.item().and_downcast::<glib::BoxedAnyObject>() {
+        fn on_bind_author(&self, list_item: &gtk::ListItem, _: &gtk::SignalListItemFactory) {
+            self.with_book_from_list_item(list_item, |book| {
                 list_item
                     .child()
                     .and_downcast::<gtk::Label>()
                     .unwrap()
-                    .set_label(&book.borrow::<Book>().author.name);
-            }
-        }
-
-        #[template_callback]
-        fn on_setup_description(&self, list_item: &gtk::ListItem, _: &gtk::SignalListItemFactory) {
-            list_item.set_child(Some(&gtk::Label::new(None)));
+                    .set_label(&book.author.name)
+            })
         }
 
         #[template_callback]
@@ -246,55 +249,6 @@ mod imp {
         }
 
         // --- BORROWED BOOKS VIEW ---
-        #[template_callback]
-        fn on_setup_title_borrowed(
-            &self,
-            list_item: &gtk::ListItem,
-            _: &gtk::SignalListItemFactory,
-        ) {
-            list_item.set_child(Some(&gtk::Label::new(None)));
-        }
-
-        #[template_callback]
-        fn on_bind_title_borrowed(
-            &self,
-            list_item: &gtk::ListItem,
-            _: &gtk::SignalListItemFactory,
-        ) {
-            if let Some(borrowed_book) = list_item.item().and_downcast::<glib::BoxedAnyObject>() {
-                let book = self.book_for_id(borrowed_book.borrow::<BorrowedBook>().book_id);
-                list_item
-                    .child()
-                    .and_downcast::<gtk::Label>()
-                    .unwrap()
-                    .set_label(&book.title);
-            }
-        }
-
-        #[template_callback]
-        fn on_setup_author_borrowed(
-            &self,
-            list_item: &gtk::ListItem,
-            _: &gtk::SignalListItemFactory,
-        ) {
-            list_item.set_child(Some(&gtk::Label::new(None)));
-        }
-
-        #[template_callback]
-        fn on_bind_author_borrowed(
-            &self,
-            list_item: &gtk::ListItem,
-            _: &gtk::SignalListItemFactory,
-        ) {
-            if let Some(borrowed_book) = list_item.item().and_downcast::<glib::BoxedAnyObject>() {
-                let book = self.book_for_id(borrowed_book.borrow::<BorrowedBook>().book_id);
-                list_item
-                    .child()
-                    .and_downcast::<gtk::Label>()
-                    .unwrap()
-                    .set_label(&book.author.name);
-            }
-        }
 
         #[template_callback]
         fn on_setup_chapters_read(
@@ -318,11 +272,6 @@ mod imp {
                     .unwrap()
                     .set_value(borrowed_book.chapters_read as f64);
             }
-        }
-
-        #[template_callback]
-        fn on_setup_date(&self, list_item: &gtk::ListItem, _: &gtk::SignalListItemFactory) {
-            list_item.set_child(Some(&gtk::Label::new(None)));
         }
 
         #[template_callback]

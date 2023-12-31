@@ -54,8 +54,8 @@ template $LibUserView : Gtk.Widget {
                                 resizable: true;
                                 fixed-width: 150;
                                 factory: Gtk.SignalListItemFactory {
-                                    setup => $on_setup_title_all() swapped;
-                                    bind => $on_bind_title_all() swapped;
+                                    setup => $on_setup_label() swapped;
+                                    bind => $on_bind_title() swapped;
                                 };
                             }
 
@@ -64,8 +64,8 @@ template $LibUserView : Gtk.Widget {
                                 resizable: true;
                                 fixed-width: 100;
                                 factory: Gtk.SignalListItemFactory {
-                                    setup => $on_setup_author_all() swapped;
-                                    bind => $on_bind_author_all() swapped;
+                                    setup => $on_setup_label() swapped;
+                                    bind => $on_bind_author() swapped;
                                 };
                             }
 
@@ -75,7 +75,7 @@ template $LibUserView : Gtk.Widget {
                                 fixed-width: 250;
                                 expand: true;
                                 factory: Gtk.SignalListItemFactory {
-                                    setup => $on_setup_description() swapped;
+                                    setup => $on_setup_label() swapped;
                                     bind => $on_bind_description() swapped;
                                 };
                             }
@@ -113,8 +113,8 @@ template $LibUserView : Gtk.Widget {
                                 fixed-width: 150;
                                 expand: true;
                                 factory: Gtk.SignalListItemFactory {
-                                    setup => $on_setup_title_borrowed() swapped;
-                                    bind => $on_bind_title_borrowed() swapped;
+                                    setup => $on_setup_label() swapped;
+                                    bind => $on_bind_title() swapped;
                                 };
                             }
 
@@ -123,8 +123,8 @@ template $LibUserView : Gtk.Widget {
                                 resizable: true;
                                 fixed-width: 100;
                                 factory: Gtk.SignalListItemFactory {
-                                    setup => $on_setup_author_borrowed() swapped;
-                                    bind => $on_bind_author_borrowed() swapped;
+                                    setup => $on_setup_label() swapped;
+                                    bind => $on_bind_author() swapped;
                                 };
                             }
 
@@ -141,7 +141,7 @@ template $LibUserView : Gtk.Widget {
                                 title: "Return on";
                                 resizable: false;
                                 factory: Gtk.SignalListItemFactory {
-                                    setup => $on_setup_date() swapped;
+                                    setup => $on_setup_label() swapped;
                                     bind => $on_bind_date() swapped;
                                 };
                             }
