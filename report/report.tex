@@ -1,0 +1,94 @@
+\documentclass{article}
+\usepackage[a4paper]{geometry}
+\usepackage{graphicx}
+\usepackage[utf8]{inputenc}
+\usepackage{subcaption}
+\usepackage{placeins}
+\usepackage{wrapfig}
+\usepackage{float}
+\usepackage{hyperref}
+\usepackage{minted}
+
+\graphicspath{{./images/}}
+
+\title{Aplicație pentru managementul unei biblioteci}
+\author{
+    Mițca Dumitru\\
+    Grupa 1311A\\
+    Coordonator: Mironeanu Cătălin\\
+    \emph{Facultatea de Automatică și Calculatoare}
+}
+\date{2023}
+
+\begin{document}
+    \maketitle
+    \hypersetup{linkbordercolor=1 1 1}
+    \renewcommand*\contentsname{Cuprins}
+    \tableofcontents
+    \hypersetup{linkbordercolor=1 0 0}
+
+    \newpage
+
+    \section{Descrierea proiectului}
+
+    \subsection{Scopul aplicației}
+
+    Aplicația a fost concepută pentru management-ul unei biblioteci, cu funcționalități utile și pentru
+    oamenii care doar împrumută cărți, cât și pentru bibliotecari.
+
+    Astfel, pentru utilizatorii normali, sunt oferite următoarele funcționalități:
+    \begin{itemize}
+        \item abilitatea de a vedea toate cărțile din bibliotecă cu detalii despre carte și autor
+        \item abilitatea de a împrumuta o carte, și de a vedea ușor data la care cartea trebuie înapoiată bibliotecii
+        \item abilitatea de a-și menține progresul citirii cărții in aplicație prin numărul de capitole citite
+    \end{itemize}
+    Ca o posibilitate de extindere în viitor a aplicației ar fi adăugare de funcționalități sociale, care ar permite
+    utilizatorilor să vadă ce cărți citesc prietenii lor, sau ca o carte să treacă direct de la un utilizator
+    la altul.
+
+    Pentru bibliotecari, următoarele funcționalități sunt oferite:
+    \begin{itemize}
+        \item
+    \end{itemize}
+
+    \subsection{Arhitectura proiectului}
+
+    Aplicația este separată în două programe: un server web și o aplicație desktop care comunică
+    prin un API REST. Aplicația desktop nu are acces la baza de date, lucru rezervat exclusiv
+    serverului.
+
+    \section{Tehnologii folosite}
+
+    Clientul și serverul sunt amândouă scrise în limbajul de programare Rust\footnote{\url{https://www.rust-lang.org/}},
+    lucru care permite împărtășirea definițiilor structurilor folosite în API prin plasarea lor într-o librărie.
+    Aceste structuri sunt transmise prin rețea serializându-le în JSON.
+
+    \subsection{Pe back-end}
+
+    Back-end-ul constă într-un server care folosește librăria \emph{axum} pentru expunerea unui API REST,
+    librăria \emph{SQLx} pentru comunicația cu baza de date și \emph{SQLite} pentru baza de date în sine.
+
+    \subsubsection*{\emph{axum}\footnote{\url{https://github.com/tokio-rs/axum}}}
+
+    \subsubsection*{\emph{SQLx}\footnote{\url{https://github.com/launchbadge/sqlx}}}
+
+    \subsubsection*{\emph{SQLite}\footnote{\url{https://www.sqlite.org/index.html}}}
+
+    \subsection{Pe front-end}
+
+    Front-end-ul constă într-o aplicație desktop care folosește \emph{GTK}\footnote{\url{https://www.gtk.org/}}
+    și \emph{Adwaita}\footnote{\url{https://gnome.pages.gitlab.gnome.org/libadwaita/doc/}} pentru interfață și
+    \emph{Soup}\footnote{\url{https://libsoup.org/libsoup-3.0/index.html}} pentru a realiza request-urile HTTP
+    pentru comunicarea cu serverul.
+
+    Am ales să folosesc GTK deoarece există suport foarte bun pentru utilizarea librăriei în Rust și pentru
+    că împreuna cu \emph{Blueprints}\footnote{\url{https://jwestman.pages.gitlab.gnome.org/blueprint-compiler/}},
+    am putut scrie definiția interfeței grafice într-un mod declarativ, Rust fiind delegat doar pentru logica
+    aplicației.
+
+    \emph{Soup} a fost ales deoarece oferă o integrare bună cu GTK, fiind o librărie care își are originile
+    în ecosistemul GTK.
+
+    \section{Structura bazei de date}
+
+\end{document}
