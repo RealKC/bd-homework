@@ -36,7 +36,7 @@ CREATE TABLE Borrows(
 ) STRICT;
 
 CREATE TABLE BorrowData(
-    borrow_id INTEGER NOT NULL,
+    borrow_id INTEGER NOT NULL UNIQUE,
     valid_until INTEGER NOT NULL, -- this is actually a date
     chapters_read INTEGER NOT NULL,
     FOREIGN KEY (borrow_id) REFERENCES Borrows(borrow_id)

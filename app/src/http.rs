@@ -126,6 +126,10 @@ impl SessionCookie {
         &self.cookie
     }
 
+    pub fn user_id(&self) -> i64 {
+        self.cookie.id
+    }
+
     pub fn user_type(&self) -> i64 {
         self.user_type
     }

@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "\nINSERT INTO Borrows(book_id, user_id) VALUES (?, ?)\nRETURNING borrow_id;\n        ",
+  "describe": {
+    "columns": [
+      {
+        "name": "borrow_id",
+        "ordinal": 0,
+        "type_info": "Int64"
+      }
+    ],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "e0f76dc194cd0e52557f9b1605b3b22d5ced6c9371a07e86a76155dd5aac6a9b"
+}

@@ -14,7 +14,7 @@ mod imp {
         glib::{g_warning, BoxedAnyObject, MainContext},
         CompositeTemplate,
     };
-    use schema::books::{Book, BorrowReply, BorrowRequest};
+    use schema::books::{Book, BorrowReply, BorrowRequest, BorrowedBook, BorrowedByReply};
 
     use crate::{
         http::{Session, SessionCookie},
@@ -26,7 +26,9 @@ mod imp {
     #[template(file = "src/user_view.blp")]
     pub struct UserView {
         #[template_child]
-        list_store: TemplateChild<gio::ListStore>,
+        all_books: TemplateChild<gio::ListStore>,
+        #[template_child]
+        borrowed_books: TemplateChild<gio::ListStore>,
 
         #[property(get, set)]
         soup_session: OnceCell<Session>,
@@ -64,27 +66,43 @@ mod imp {
             self.session_cookie.borrow().as_ref().cloned().unwrap()
         }
 
+        fn book_for_id(&self, id: i64) -> Book {
+            self.all_books
+                .clone()
+                .into_iter()
+                .map(|elem| {
+                    elem.unwrap()
+                        .downcast::<BoxedAnyObject>()
+                        .map(|book| book.borrow::<Book>().to_owned())
+                        .unwrap()
+                })
+                .find(|book| book.book_id == id)
+                .unwrap()
+        }
+
         #[template_callback]
         async fn on_show(&self) {
-            self.refresh().await;
+            self.refresh_books().await;
+            self.refresh_borrowed_books().await;
         }
 
         #[template_callback]
         async fn on_refresh_clicked(&self, _: &gtk::Button) {
-            self.refresh().await;
+            self.refresh_books().await;
+            self.refresh_borrowed_books().await;
         }
 
-        async fn refresh(&self) {
+        async fn refresh_books(&self) {
             let books = self.soup_session().get::<Vec<Book>>("/books").await;
 
             match books {
                 Ok(books) => {
-                    self.list_store.remove_all();
+                    self.all_books.remove_all();
                     let books = books
                         .into_iter()
                         .map(BoxedAnyObject::new)
                         .collect::<Vec<_>>();
-                    self.list_store.extend_from_slice(&books);
+                    self.all_books.extend_from_slice(&books);
                 }
                 Err(err) => {
                     self.obj().show_toast_msg("oops");
@@ -93,13 +111,37 @@ mod imp {
             }
         }
 
+        async fn refresh_borrowed_books(&self) {
+            let books = self
+                .soup_session()
+                .post::<BorrowedByReply>("", &format!("/borrowed-by/{}", self.cookie().user_id()))
+                .await;
+
+            match books {
+                Ok(books) => {
+                    self.borrowed_books.remove_all();
+                    let books = books
+                        .into_iter()
+                        .map(BoxedAnyObject::new)
+                        .collect::<Vec<_>>();
+                    self.borrowed_books.extend_from_slice(&books);
+                }
+                Err(err) => {
+                    self.obj().show_toast_msg("oops");
+                    g_warning!("biblioteca", "Failed to fetch books: {err}")
+                }
+            }
+        }
+
+        // --- ALL BOOKS VIEW ---
+
         #[template_callback]
-        fn on_setup_title(&self, list_item: &gtk::ListItem, _: &gtk::SignalListItemFactory) {
+        fn on_setup_title_all(&self, list_item: &gtk::ListItem, _: &gtk::SignalListItemFactory) {
             list_item.set_child(Some(&gtk::Label::new(None)));
         }
 
         #[template_callback]
-        fn on_bind_title(&self, list_item: &gtk::ListItem, _: &gtk::SignalListItemFactory) {
+        fn on_bind_title_all(&self, list_item: &gtk::ListItem, _: &gtk::SignalListItemFactory) {
             if let Some(book) = list_item.item().and_downcast::<glib::BoxedAnyObject>() {
                 list_item
                     .child()
@@ -110,12 +152,12 @@ mod imp {
         }
 
         #[template_callback]
-        fn on_setup_author(&self, list_item: &gtk::ListItem, _: &gtk::SignalListItemFactory) {
+        fn on_setup_author_all(&self, list_item: &gtk::ListItem, _: &gtk::SignalListItemFactory) {
             list_item.set_child(Some(&gtk::Label::new(None)));
         }
 
         #[template_callback]
-        fn on_bind_author(&self, list_item: &gtk::ListItem, _: &gtk::SignalListItemFactory) {
+        fn on_bind_author_all(&self, list_item: &gtk::ListItem, _: &gtk::SignalListItemFactory) {
             if let Some(book) = list_item.item().and_downcast::<glib::BoxedAnyObject>() {
                 list_item
                     .child()
@@ -198,6 +240,101 @@ mod imp {
                     }
                 }
                 Err(e) => g_warning!("biblioteca", "we got the error: {}", e),
+            }
+
+            self.refresh_borrowed_books().await;
+        }
+
+        // --- BORROWED BOOKS VIEW ---
+        #[template_callback]
+        fn on_setup_title_borrowed(
+            &self,
+            list_item: &gtk::ListItem,
+            _: &gtk::SignalListItemFactory,
+        ) {
+            list_item.set_child(Some(&gtk::Label::new(None)));
+        }
+
+        #[template_callback]
+        fn on_bind_title_borrowed(
+            &self,
+            list_item: &gtk::ListItem,
+            _: &gtk::SignalListItemFactory,
+        ) {
+            if let Some(borrowed_book) = list_item.item().and_downcast::<glib::BoxedAnyObject>() {
+                let book = self.book_for_id(borrowed_book.borrow::<BorrowedBook>().book_id);
+                list_item
+                    .child()
+                    .and_downcast::<gtk::Label>()
+                    .unwrap()
+                    .set_label(&book.title);
+            }
+        }
+
+        #[template_callback]
+        fn on_setup_author_borrowed(
+            &self,
+            list_item: &gtk::ListItem,
+            _: &gtk::SignalListItemFactory,
+        ) {
+            list_item.set_child(Some(&gtk::Label::new(None)));
+        }
+
+        #[template_callback]
+        fn on_bind_author_borrowed(
+            &self,
+            list_item: &gtk::ListItem,
+            _: &gtk::SignalListItemFactory,
+        ) {
+            if let Some(borrowed_book) = list_item.item().and_downcast::<glib::BoxedAnyObject>() {
+                let book = self.book_for_id(borrowed_book.borrow::<BorrowedBook>().book_id);
+                list_item
+                    .child()
+                    .and_downcast::<gtk::Label>()
+                    .unwrap()
+                    .set_label(&book.author.name);
+            }
+        }
+
+        #[template_callback]
+        fn on_setup_chapters_read(
+            &self,
+            list_item: &gtk::ListItem,
+            _: &gtk::SignalListItemFactory,
+        ) {
+            let button = gtk::SpinButton::builder()
+                .adjustment(&gtk::Adjustment::new(0.0, 0.0, 1000.0, 1.0, 0.0, 0.0))
+                .build();
+            list_item.set_child(Some(&button));
+        }
+
+        #[template_callback]
+        fn on_bind_chapters_read(&self, list_item: &gtk::ListItem, _: &gtk::SignalListItemFactory) {
+            if let Some(borrowed_book) = list_item.item().and_downcast::<glib::BoxedAnyObject>() {
+                let borrowed_book = borrowed_book.borrow::<BorrowedBook>();
+                list_item
+                    .child()
+                    .and_downcast::<gtk::SpinButton>()
+                    .unwrap()
+                    .set_value(borrowed_book.chapters_read as f64);
+            }
+        }
+
+        #[template_callback]
+        fn on_setup_date(&self, list_item: &gtk::ListItem, _: &gtk::SignalListItemFactory) {
+            list_item.set_child(Some(&gtk::Label::new(None)));
+        }
+
+        #[template_callback]
+        fn on_bind_date(&self, list_item: &gtk::ListItem, _: &gtk::SignalListItemFactory) {
+            if let Some(borrowed_book) = list_item.item().and_downcast::<glib::BoxedAnyObject>() {
+                let borrowed_book = borrowed_book.borrow::<BorrowedBook>();
+                let return_on = glib::DateTime::from_unix_local(borrowed_book.valid_until).unwrap();
+                list_item
+                    .child()
+                    .and_downcast::<gtk::Label>()
+                    .unwrap()
+                    .set_label(&return_on.format("%d %B %Y").unwrap());
             }
         }
     }

@@ -1,5 +1,9 @@
-use axum::{extract::State, Json};
-use schema::books::{Author, Book, BorrowReply, BorrowRequest};
+use axum::{
+    extract::{Path, State},
+    Json,
+};
+use chrono::{Days, Local};
+use schema::books::{Author, Book, BorrowReply, BorrowRequest, BorrowedBook, BorrowedByReply};
 use sqlx::SqlitePool;
 
 use crate::error::{IntoRouteError, RouteError};
@@ -81,12 +85,27 @@ WHERE b.book_id = ? AND u.user_id = ?;
             }));
         }
 
-        sqlx::query!(
+        let valid_until = (Local::now() + Days::new(30)).timestamp();
+
+        let borrow_id = sqlx::query!(
             r#"
-INSERT INTO Borrows(book_id, user_id) VALUES (?, ?);
+INSERT INTO Borrows(book_id, user_id) VALUES (?, ?)
+RETURNING borrow_id;
         "#,
             request.book_id,
             request.cookie.id
+        )
+        .fetch_one(&mut *tx)
+        .await
+        .unwrap();
+
+        sqlx::query!(
+            r#"
+INSERT INTO BorrowData(borrow_id, valid_until, chapters_read)
+VALUES (?, ?, 0);
+    "#,
+            borrow_id.borrow_id,
+            valid_until
         )
         .execute(&mut *tx)
         .await
@@ -98,4 +117,33 @@ INSERT INTO Borrows(book_id, user_id) VALUES (?, ?);
     Ok(Json(BorrowReply {
         already_borrowed: false,
     }))
+}
+
+pub async fn borrowed_by(
+    Path(user_id): Path<i64>,
+    State(pool): State<SqlitePool>,
+) -> Result<Json<BorrowedByReply>, RouteError> {
+    let records = sqlx::query!(
+        r#"
+SELECT d.borrow_id, b.book_id, d.valid_until, d.chapters_read
+FROM Borrows b JOIN BorrowData d ON b.borrow_id = d.borrow_id
+WHERE b.user_id = ?
+    "#,
+        user_id
+    )
+    .fetch_all(&pool)
+    .await
+    .unwrap();
+
+    Ok(Json(
+        records
+            .into_iter()
+            .map(|record| BorrowedBook {
+                borrow_id: record.borrow_id,
+                book_id: record.book_id,
+                valid_until: record.valid_until,
+                chapters_read: record.chapters_read,
+            })
+            .collect(),
+    ))
 }

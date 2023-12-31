@@ -38,37 +38,38 @@ template $LibUserView : Gtk.Widget {
                     name: "all-books";
                     title: "Toate cărțile";
 
+
                     child: Gtk.ScrolledWindow {
                         Gtk.ColumnView {
                             reorderable: false;
 
                             model: Gtk.NoSelection {
-                                model: Gio.ListStore list_store {};
+                                model: Gio.ListStore all_books {};
                             };
 
                             activate => $on_show_book_information() swapped;
 
-                            Gtk.ColumnViewColumn title-column {
+                            Gtk.ColumnViewColumn {
                                 title: "Titlu";
                                 resizable: true;
                                 fixed-width: 150;
                                 factory: Gtk.SignalListItemFactory {
-                                    setup => $on_setup_title() swapped;
-                                    bind => $on_bind_title() swapped;
+                                    setup => $on_setup_title_all() swapped;
+                                    bind => $on_bind_title_all() swapped;
                                 };
                             }
 
-                            Gtk.ColumnViewColumn author-column {
-                                title: "Author";
+                            Gtk.ColumnViewColumn {
+                                title: "Autor";
                                 resizable: true;
                                 fixed-width: 100;
                                 factory: Gtk.SignalListItemFactory {
-                                    setup => $on_setup_author() swapped;
-                                    bind => $on_bind_author() swapped;
+                                    setup => $on_setup_author_all() swapped;
+                                    bind => $on_bind_author_all() swapped;
                                 };
                             }
 
-                            Gtk.ColumnViewColumn description-column {
+                            Gtk.ColumnViewColumn {
                                 title: "Rezumat";
                                 resizable: true;
                                 fixed-width: 250;
@@ -79,7 +80,7 @@ template $LibUserView : Gtk.Widget {
                                 };
                             }
 
-                            Gtk.ColumnViewColumn borrow-column {
+                            Gtk.ColumnViewColumn {
                                 fixed-width: 140;
                                 factory: Gtk.SignalListItemFactory {
                                     setup => $on_setup_borrow() swapped;
@@ -94,8 +95,57 @@ template $LibUserView : Gtk.Widget {
                     name: "borrowed-books";
                     title: "Cărți împrumutate";
 
-                    child: Adw.StatusPage {
-                        title: "Hi";
+                    child: Gtk.ScrolledWindow {
+                        Gtk.ColumnView {
+                            reorderable: false;
+
+                            model: Gtk.NoSelection {
+                                model: Gio.ListStore borrowed_books {
+
+                                };
+                            };
+
+                            activate => $on_show_book_information() swapped;
+
+                            Gtk.ColumnViewColumn {
+                                title: "Titlu";
+                                resizable: true;
+                                fixed-width: 150;
+                                expand: true;
+                                factory: Gtk.SignalListItemFactory {
+                                    setup => $on_setup_title_borrowed() swapped;
+                                    bind => $on_bind_title_borrowed() swapped;
+                                };
+                            }
+
+                            Gtk.ColumnViewColumn {
+                                title: "Autor";
+                                resizable: true;
+                                fixed-width: 100;
+                                factory: Gtk.SignalListItemFactory {
+                                    setup => $on_setup_author_borrowed() swapped;
+                                    bind => $on_bind_author_borrowed() swapped;
+                                };
+                            }
+
+                            Gtk.ColumnViewColumn {
+                                title: "Capitole citite";
+                                resizable: false;
+                                factory: Gtk.SignalListItemFactory {
+                                    setup => $on_setup_chapters_read() swapped;
+                                    bind => $on_bind_chapters_read() swapped;
+                                };
+                            }
+
+                            Gtk.ColumnViewColumn {
+                                title: "Return on";
+                                resizable: false;
+                                factory: Gtk.SignalListItemFactory {
+                                    setup => $on_setup_date() swapped;
+                                    bind => $on_bind_date() swapped;
+                                };
+                            }
+                        }
                     };
                 }
             }

@@ -33,3 +33,13 @@ pub struct BorrowRequest {
 pub struct BorrowReply {
     pub already_borrowed: bool,
 }
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct BorrowedBook {
+    pub borrow_id: Integer,
+    pub book_id: Integer,
+    pub valid_until: Integer,
+    pub chapters_read: Integer,
+}
+
+pub type BorrowedByReply = Vec<BorrowedBook>;

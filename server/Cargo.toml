@@ -14,3 +14,4 @@ serde_json.workspace = true
 sqlx = { version = "0.7", features = [ "runtime-tokio", "tls-rustls", "sqlite" ] }
 anyhow = "1.0.77"
 argon2 = { version = "0.5.2", features = [ "std" ] }
+chrono = "0.4.31"

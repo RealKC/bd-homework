@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\nINSERT INTO BorrowData(borrow_id, valid_until, chapters_read)\nVALUES (?, ?, 0);\n    ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "343f1c119d373abcbef13644dbb4e4b61bdc7c6d76775dab1ec0213ad471d306"
+}
