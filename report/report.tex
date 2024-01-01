@@ -70,9 +70,47 @@
 
     \subsubsection*{\emph{axum}\footnote{\url{https://github.com/tokio-rs/axum}}}
 
+    \emph{axum} este un framework pentru servere web ce permite descrierea rutelor expuse de server într-un mod
+    declarativ. Acest framework este foarte simplu de utilizat și nu impune mult boilerplate, un exemplu de definire
+    a rutelor este:
+    \begin{minted}[linenos, breaklines]{rust}
+let app = Router::new()
+    .route("/", get(root))
+    .route("/books", get(books::books))
+    .route("/borrow", post(books::borrow))
+    .route("/borrowed-by/:user_id", post(books::borrowed_by))
+    .nest("/auth", auth::router(pool.clone()))
+    .fallback(fallback) // această funcție permite returnarea unui răspuns HTTP cu codul 404 automat pentru rute necunoscute
+    .with_state(pool);
+    \end{minted}
+
+    \emph{axum} permite și definirea în prototipul funcțiilor formatul în care sunt serializate request-urile de la client
+    și răspunsul de la server, ocupându-se automat de serializarea și deserializarea acestora, spre exemplu:
+    \begin{minted}[linenos, breaklines]{rust}
+async fn create_account(
+    State(pool): State<SqlitePool>,
+    Json(data): Json<CreateAccount>,
+) -> Result<Json<LoginReply>, RouteError>;
+    \end{minted}
+
     \subsubsection*{\emph{SQLx}\footnote{\url{https://github.com/launchbadge/sqlx}}}
 
+    \emph{SQLx} este o librărie care permite conectarea la baze de date și scrierea de interogări SQL.
+    Particularitatea acestei librăriei este integrarea cu funcționalitățile pentru asincronicitate în
+    Rust\footnote{Totuși, datorită utilizării \emph{SQLite}, back-end-ul nu beneficiază total de acest lucru,
+    dar dacă ar fi să schimb baza de date, ar reprezenta un avantaj.} și posibilitatea verificării în timpul
+    compilării că interogările scrise de programator sunt în coconcordanță cu schema bazei de date definită
+    în fișiere SQL de programator.
+
     \subsubsection*{\emph{SQLite}\footnote{\url{https://www.sqlite.org/index.html}}}
+
+    \emph{SQLite} este o bază de date relațională, implementată ca o librărie care rulează în același proces ca
+    aplicație ce dorește să o folosească. Deși are "lite" în nume, \emph{SQLite} este o implementare completă a
+    SQL\footnote{Cu mențiunea că suportul pentru foreign key-uri trebuie activat per conexiune, lucru realizat de
+    back-end.} și oferă tranzacției care respectă proprietățile ACID.
+
+    Conexiunea către baza de date este realizată prin intermediul \emph{SQLx}, care pur și simplu apelează funcția
+    din \emph{SQLite} pentru deschiderea unei baze de date.
 
     \subsection{Pe front-end}
 
@@ -90,5 +128,29 @@
     în ecosistemul GTK.
 
     \section{Structura bazei de date}
+
+    \begin{figure}[H]
+        \includegraphics[width=\linewidth]{ER-Diagram}
+        \centering
+    \end{figure}
+
+    Mențiuni despre normalizarea datelor:
+    \begin{itemize}
+        \item
+    \end{itemize}
+    Constrângeri utilizate în baza de date:
+    \begin{itemize}
+        \item constrângeri de tip cheie primară --- majoritatea tabelelor au chei primare, generate la inserare prin
+        funcționalitatea \texttt{AUTOINCREMENT} a \emph{SQLite} și unicitatea lor este asigurată prin utilizarea
+        constrăngerii \texttt{PRIMARY KEY} aplicată coloanelor relevante la crearea tabelelor
+        \item constrângeri de tip cheie străină --- datorită existența relațiilor între tabele, de exemplu: utilizator
+        la cărți împrumutate sau carte la autor; am folosit constrângerea \texttt{FOREIGN KEY} pentru a asigura coerența
+        datelor, un exemplu de situație prevenită astfel este ștergerea unui autor când încă există cărți scrise de el
+        în baza de date
+        \item constrăngeri de tipul \texttt{NOT NULL} --- am folosit astfel de constrângeri pentru că pentru majoritatea
+        coloanelor din baza de date, absența valorilor nu are sens
+        \item o constrângere de tipul \texttt{UNIQUE} --- în tabela \texttt{BorrowData}, pentru a asigura că nu există mai
+        multe înregistrări cu date auxiliare pentru același împrumut
+    \end{itemize}
 
 \end{document}

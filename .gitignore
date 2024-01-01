@@ -11,3 +11,4 @@ target/
 *.synctex.gz
 *.synctex.gz(busy)
 *.toc
+_minted-report/
