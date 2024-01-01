@@ -1,9 +1,11 @@
+use std::str::FromStr;
+
 use axum::{
     routing::{get, post},
     Router,
 };
 use error::RouteError;
-use sqlx::SqlitePool;
+use sqlx::{sqlite::SqliteConnectOptions, SqlitePool};
 
 mod auth;
 mod books;
@@ -13,9 +15,13 @@ mod error;
 async fn main() {
     tracing_subscriber::fmt::init();
 
-    let pool = SqlitePool::connect("sqlite://data.sqlite?mode=rwc")
-        .await
-        .expect("Failed to open database");
+    let pool = SqlitePool::connect_with(
+        SqliteConnectOptions::from_str("sqlite://data.sqlite?mode=rwc")
+            .unwrap()
+            .foreign_keys(true),
+    )
+    .await
+    .expect("Failed to open database");
 
     sqlx::migrate!()
         .run(&pool)
