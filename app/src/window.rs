@@ -54,10 +54,11 @@ mod imp {
 
     use adw::{glib, prelude::*, subclass::prelude::*};
     use gtk::CompositeTemplate;
-    use schema::NORMAL_USER;
+    use schema::{LIBRARIAN, NORMAL_USER};
 
     use crate::{
         http::{Session, SessionCookie},
+        librarian_view::LibrarianView,
         login_page::LoginPage,
         user_view::UserView,
     };
@@ -84,6 +85,7 @@ mod imp {
         type ParentType = gtk::ApplicationWindow;
 
         fn class_init(klass: &mut Self::Class) {
+            LibrarianView::ensure_type();
             LoginPage::ensure_type();
             UserView::ensure_type();
 
@@ -117,6 +119,8 @@ mod imp {
 
             if user_type == NORMAL_USER {
                 self.stack.set_visible_child_name("user-view");
+            } else if user_type == LIBRARIAN {
+                self.stack.set_visible_child_name("librarian-view");
             }
         }
     }

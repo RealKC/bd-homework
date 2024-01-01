@@ -2,6 +2,7 @@ use adw::{glib, prelude::*, Application};
 use window::LibWindow;
 
 mod http;
+mod librarian_view;
 mod login_page;
 mod user_view;
 mod window;

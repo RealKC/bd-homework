@@ -21,6 +21,14 @@ template $LibWindow : Gtk.ApplicationWindow {
                     session_cookie: bind template.session_cookie;
                 };
             }
+
+            Gtk.StackPage {
+                name: "librarian-view";
+                child: $LibLibrarianView {
+                    soup_session: bind template.soup_session;
+                    session_cookie: bind template.session_cookie;
+                };
+            }
         }
     }
 

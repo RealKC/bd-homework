@@ -1,0 +1,84 @@
+using Gtk 4.0;
+using Adw 1;
+using Gio 2.0;
+
+template $LibLibrarianView : Gtk.Widget {
+    layout-manager: Gtk.BinLayout {};
+    width-request: 640;
+
+    realize => $on_show();
+
+    Adw.ToolbarView  {
+        [top]
+        Adw.HeaderBar {
+            show-back-button: false;
+
+            title-widget: Adw.ViewSwitcher {
+                policy: wide;
+                stack: view-stack;
+            };
+
+            [start]
+            Gtk.Button {
+                icon-name: "view-refresh-symbolic";
+                tooltip-text: "Reîmprospătează";
+
+                clicked => $on_refresh_clicked() swapped;
+            }
+        }
+
+        content: Gtk.Frame {
+            margin-top: 12;
+            margin-bottom: 12;
+            margin-start: 6;
+            margin-end: 6;
+
+            Adw.ViewStack view-stack {
+                Adw.ViewStackPage {
+                    name: "all-books";
+                    title: "Toate cărțile";
+
+                    child: Gtk.ScrolledWindow {
+                        Gtk.ColumnView {
+                            reorderable: false;
+
+                            model: Gtk.NoSelection {
+                                model: Gio.ListStore all_books {};
+                            };
+                        }
+                    };
+                }
+
+                Adw.ViewStackPage {
+                    name: "borrows";
+                    title: "Împrumuturi";
+
+                    child: Gtk.ScrolledWindow {
+                        Gtk.ColumnView {
+                            reorderable: false;
+
+                            model: Gtk.NoSelection {
+                                model: Gio.ListStore borrows {};
+                            };
+                        }
+                    };
+                }
+
+                Adw.ViewStackPage {
+                    name: "users";
+                    title: "Administrare utilizatori";
+
+                    child: Gtk.ScrolledWindow {
+                        Gtk.ColumnView {
+                            reorderable: false;
+
+                            model: Gtk.NoSelection {
+                                model: Gio.ListStore users {};
+                            };
+                        }
+                    };
+                }
+            }
+        };
+    }
+}
