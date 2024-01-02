@@ -1,10 +1,12 @@
 use adw::{glib, prelude::*, Application};
 use window::LibWindow;
 
+mod confirmation_dialog;
 mod http;
 mod librarian_view;
 mod login_page;
 mod user_view;
+mod widget_ext;
 mod window;
 
 fn main() -> glib::ExitCode {
