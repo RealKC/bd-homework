@@ -4,18 +4,26 @@ use argon2::{
 };
 use axum::{extract::State, http::StatusCode, routing::post, Json, Router};
 use schema::{
-    auth::{CreateAccount, GetAllUsersReply, GetAllUsersRequest, Login, LoginReply, User},
-    LIBRARIAN,
+    auth::{
+        CreateAccount, DeleteUserReply, DeleteUserRequest, GetAllUsersReply, GetAllUsersRequest,
+        Login, LoginReply, PromoteUserRequest, User,
+    },
+    Integer,
 };
 use sqlx::SqlitePool;
 
-use crate::error::{IntoRouteError, RouteError};
+use crate::{
+    error::{IntoRouteError, RouteError},
+    utils::verify_user_is_librarian,
+};
 
 pub fn router(state: SqlitePool) -> Router<SqlitePool> {
     Router::new()
         .route("/login", post(login))
         .route("/create-account", post(create_account))
         .route("/all-users", post(get_all_users))
+        .route("/delete-user", post(delete_user))
+        .route("/promote-user", post(promote_user))
         .with_state(state)
 }
 
@@ -95,15 +103,7 @@ pub async fn get_all_users(
     State(pool): State<SqlitePool>,
     Json(data): Json<GetAllUsersRequest>,
 ) -> Result<Json<GetAllUsersReply>, RouteError> {
-    let requester_id = data.cookie.id;
-    let requester_type = sqlx::query!("SELECT type FROM Users WHERE user_id = ?", requester_id)
-        .fetch_one(&pool)
-        .await
-        .http_status_error(StatusCode::INTERNAL_SERVER_ERROR)?;
-
-    if requester_type.r#type != LIBRARIAN {
-        return Err(RouteError::new_forbidden());
-    }
+    verify_user_is_librarian(&pool, data.cookie).await?;
 
     let records = sqlx::query!(
         r#"
@@ -126,4 +126,71 @@ FROM Users;
         .collect();
 
     Ok(Json(reply))
+}
+
+pub async fn promote_user(
+    State(pool): State<SqlitePool>,
+    Json(data): Json<PromoteUserRequest>,
+) -> Result<(), RouteError> {
+    verify_user_is_librarian(&pool, data.cookie).await?;
+
+    sqlx::query!(
+        r"
+UPDATE Users
+SET type = 2
+WHERE user_id = ?
+    ",
+        data.user_to_be_promoted
+    )
+    .execute(&pool)
+    .await
+    .http_internal_error("Failed to execute UPDATE")?;
+
+    Ok(())
+}
+
+pub async fn delete_user(
+    State(pool): State<SqlitePool>,
+    Json(data): Json<DeleteUserRequest>,
+) -> Result<Json<DeleteUserReply>, RouteError> {
+    verify_user_is_librarian(&pool, data.cookie.clone()).await?;
+
+    if data.user_to_be_deleted == data.cookie.id {
+        return Ok(Json(DeleteUserReply::CannotDeleteSelf));
+    }
+
+    let count = count_books_borrowed_by(&pool, data.user_to_be_deleted).await?;
+
+    if count > 0 {
+        return Ok(Json(DeleteUserReply::UsersStillHadBooks));
+    }
+
+    sqlx::query!(
+        r"
+DELETE FROM Users
+WHERE user_id = ?
+    ",
+        data.user_to_be_deleted
+    )
+    .execute(&pool)
+    .await
+    .http_internal_error("Failed to execute DELETE")?;
+
+    Ok(Json(DeleteUserReply::Ok))
+}
+
+async fn count_books_borrowed_by(pool: &SqlitePool, user_id: Integer) -> Result<u64, RouteError> {
+    let record = sqlx::query!(
+        r#"
+SELECT COUNT(*) as "count"
+FROM Borrows
+WHERE user_id = ?
+    "#,
+        user_id
+    )
+    .fetch_one(pool)
+    .await
+    .http_internal_error("Failed to count books")?;
+
+    Ok(record.count as u64)
 }

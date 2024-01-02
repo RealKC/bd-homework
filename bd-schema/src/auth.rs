@@ -35,3 +35,23 @@ pub struct User {
 }
 
 pub type GetAllUsersReply = Vec<User>;
+
+#[derive(Serialize, Deserialize, Default)]
+pub struct PromoteUserRequest {
+    pub user_to_be_promoted: Integer,
+    pub cookie: session::Cookie,
+}
+
+#[derive(Serialize, Deserialize, Default)]
+pub struct DeleteUserRequest {
+    pub user_to_be_deleted: Integer,
+    pub cookie: session::Cookie,
+}
+
+#[derive(Serialize, Deserialize, Default)]
+pub enum DeleteUserReply {
+    #[default]
+    Ok,
+    UsersStillHadBooks,
+    CannotDeleteSelf,
+}
