@@ -32,6 +32,7 @@ pub struct User {
     pub name: Text,
     pub email: Text,
     pub kind: Integer,
+    pub borrowed_book_count: Integer,
 }
 
 pub type GetAllUsersReply = Vec<User>;

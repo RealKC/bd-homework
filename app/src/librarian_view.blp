@@ -192,6 +192,15 @@ template $LibLibrarianView : Gtk.Widget {
                             }
 
                             Gtk.ColumnViewColumn {
+                                title: "# cărți împrumutate";
+
+                                factory: Gtk.SignalListItemFactory {
+                                    setup => $on_setup_label() swapped;
+                                    bind => $on_bind_borrowed_book_count() swapped;
+                                };
+                            }
+
+                            Gtk.ColumnViewColumn {
                                 title: "Tip utilizator";
                                 resizable: true;
 

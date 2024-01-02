@@ -258,6 +258,21 @@ mod imp {
         }
 
         #[template_callback]
+        fn on_bind_borrowed_book_count(
+            &self,
+            list_item: &gtk::ListItem,
+            _: &gtk::SignalListItemFactory,
+        ) {
+            if let Some(object) = list_item.item().and_downcast::<glib::BoxedAnyObject>() {
+                list_item
+                    .child()
+                    .and_downcast::<gtk::Label>()
+                    .unwrap()
+                    .set_label(&object.borrow::<User>().borrowed_book_count.to_string());
+            }
+        }
+
+        #[template_callback]
         fn on_bind_user_type(&self, list_item: &gtk::ListItem, _: &gtk::SignalListItemFactory) {
             if let Some(object) = list_item.item().and_downcast::<glib::BoxedAnyObject>() {
                 let user_type = object.borrow::<User>().kind;

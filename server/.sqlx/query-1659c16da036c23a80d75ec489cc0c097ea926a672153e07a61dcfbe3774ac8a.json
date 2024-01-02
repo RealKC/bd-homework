@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "\nSELECT COUNT(*) as \"count\"\nFROM Borrows\nWHERE user_id = ?\n    ",
+  "describe": {
+    "columns": [
+      {
+        "name": "count",
+        "ordinal": 0,
+        "type_info": "Int"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "1659c16da036c23a80d75ec489cc0c097ea926a672153e07a61dcfbe3774ac8a"
+}

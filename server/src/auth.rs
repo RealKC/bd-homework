@@ -107,8 +107,13 @@ pub async fn get_all_users(
 
     let records = sqlx::query!(
         r#"
-SELECT user_id, name, email, type
-FROM Users;
+SELECT
+    u.user_id,
+    u.name,
+    u.email,
+    u.type,
+    (SELECT COUNT(*) FROM Borrows bo WHERE bo.user_id = u.user_id) AS "borrowed_book_count!: i64"
+FROM Users u;
     "#
     )
     .fetch_all(&pool)
@@ -118,10 +123,11 @@ FROM Users;
     let reply = records
         .into_iter()
         .map(|record| User {
-            id: record.user_id,
+            id: record.user_id.unwrap(),
             name: record.name,
             email: record.email,
             kind: record.r#type,
+            borrowed_book_count: record.borrowed_book_count,
         })
         .collect();
 
