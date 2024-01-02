@@ -11,7 +11,7 @@ mod imp {
     use adw::{glib, prelude::*, subclass::prelude::*};
     use gtk::{
         gio,
-        glib::{g_warning, BoxedAnyObject},
+        glib::{g_warning, BoxedAnyObject, GString},
         CompositeTemplate,
     };
     use schema::{
@@ -152,6 +152,14 @@ mod imp {
         }
 
         // --- BOOKS VIEW ---
+
+        #[template_callback(function)]
+        fn show_new_book_button(visible_child: GString) -> bool {
+            visible_child == "all-books"
+        }
+
+        #[template_callback]
+        fn on_new_book_clicked(&self, _: gtk::Button) {}
 
         #[template_callback]
         fn on_bind_title(&self, list_item: &gtk::ListItem, _: &gtk::SignalListItemFactory) {

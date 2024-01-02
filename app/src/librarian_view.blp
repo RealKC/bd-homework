@@ -19,11 +19,25 @@ template $LibLibrarianView : Gtk.Widget {
             };
 
             [start]
-            Gtk.Button {
-                icon-name: "view-refresh-symbolic";
-                tooltip-text: "Reîmprospătează";
+            Gtk.Box {
+                orientation: horizontal;
+                spacing: 6;
 
-                clicked => $on_refresh_clicked() swapped;
+                Gtk.Button {
+                    icon-name: "view-refresh-symbolic";
+                    tooltip-text: "Reîmprospătează";
+
+                    clicked => $on_refresh_clicked() swapped;
+                }
+
+                Gtk.Button {
+                    icon-name: "document-new-symbolic";
+                    tooltip-text: "Adaugă o carte nouă";
+                    styles ["suggested-action"]
+                    visible: bind $show_new_book_button(view_stack.visible-child-name) as <bool>;
+
+                    clicked => $on_new_book_clicked() swapped;
+                }
             }
         }
 
