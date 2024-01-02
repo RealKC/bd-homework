@@ -1,3 +1,5 @@
+use std::mem;
+
 use gtk::glib::{self, Bytes, ValueDelegate};
 use serde::{de::DeserializeOwned, Serialize};
 use serde_json::Value as JsonObject;
@@ -20,7 +22,7 @@ impl Session {
         Self(soup::Session::new())
     }
 
-    pub async fn post<Res: DeserializeOwned>(
+    pub async fn post<Res: DeserializeOwned + Default>(
         &self,
         request: impl Serialize,
         endpoint: &str,
@@ -57,6 +59,10 @@ impl Session {
                 },
             })
         } else {
+            if mem::size_of::<Res>() == 0 {
+                return Ok(Res::default());
+            }
+
             Ok(serde_json::from_slice(&raw_response).map_err(Error::Deserialization)?)
         }
     }
