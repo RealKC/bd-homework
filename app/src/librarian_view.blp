@@ -15,7 +15,7 @@ template $LibLibrarianView : Gtk.Widget {
 
             title-widget: Adw.ViewSwitcher {
                 policy: wide;
-                stack: view-stack;
+                stack: view_stack;
             };
 
             [start]
@@ -33,7 +33,7 @@ template $LibLibrarianView : Gtk.Widget {
             margin-start: 6;
             margin-end: 6;
 
-            Adw.ViewStack view-stack {
+            Adw.ViewStack view_stack {
                 Adw.ViewStackPage {
                     name: "all-books";
                     title: "Toate cărțile";
@@ -45,6 +45,56 @@ template $LibLibrarianView : Gtk.Widget {
                             model: Gtk.NoSelection {
                                 model: Gio.ListStore all_books {};
                             };
+
+                            Gtk.ColumnViewColumn {
+                                title: "Titlu";
+                                resizable: true;
+                                expand: true;
+                                factory: Gtk.SignalListItemFactory {
+                                    setup => $on_setup_label() swapped;
+                                    bind => $on_bind_title() swapped;
+                                };
+                            }
+
+                            Gtk.ColumnViewColumn {
+                                title: "Autor";
+                                resizable: true;
+                                factory: Gtk.SignalListItemFactory {
+                                    setup => $on_setup_label() swapped;
+                                    bind => $on_bind_author() swapped;
+                                };
+                            }
+
+                            Gtk.ColumnViewColumn {
+                                title: "Editura";
+                                resizable: true;
+                                factory: Gtk.SignalListItemFactory {
+                                    setup => $on_setup_label() swapped;
+                                    bind => $on_bind_publisher() swapped;
+                                };
+                            }
+
+                            Gtk.ColumnViewColumn {
+                                factory: Gtk.BuilderListItemFactory {
+                                    template ListItem {
+                                        child: Gtk.Box {
+                                            orientation: horizontal;
+                                            spacing: 8;
+
+                                            Gtk.Button {
+                                                label: "Editează";
+                                                clicked => $on_edit_book_clicked();
+                                            }
+
+                                            Gtk.Button {
+                                                label: "Șterge";
+                                                clicked => $on_delete_book_clicked();
+                                                styles ["destructive-action"]
+                                            }
+                                        };
+                                    }
+                                };
+                            }
                         }
                     };
                 }
@@ -60,6 +110,50 @@ template $LibLibrarianView : Gtk.Widget {
                             model: Gtk.NoSelection {
                                 model: Gio.ListStore borrows {};
                             };
+
+                            Gtk.ColumnViewColumn {
+                                title: "Carte";
+                                resizable: true;
+                                expand: true;
+
+                                factory: Gtk.SignalListItemFactory {
+                                    setup => $on_setup_label() swapped;
+                                    bind => $on_bind_borrow_book_title() swapped;
+                                };
+                            }
+
+                            Gtk.ColumnViewColumn {
+                                title: "Împrumutată de";
+                                resizable: true;
+
+                                factory: Gtk.SignalListItemFactory {
+                                    setup => $on_setup_label() swapped;
+                                    bind => $on_bind_borrow_borrower_name() swapped;
+                                };
+                            }
+
+                            Gtk.ColumnViewColumn {
+                                factory: Gtk.BuilderListItemFactory {
+                                    template ListItem {
+                                        child: Gtk.Box {
+                                            orientation: vertical;
+                                            valign: center;
+                                            spacing: 3;
+
+                                            Gtk.Button {
+                                                label: "Prelungește durație împrumut";
+                                                clicked => $on_lengthen_borrow_clicked();
+                                            }
+
+                                            Gtk.Button {
+                                                label: "Termină împrumutul acum";
+                                                clicked => $on_finish_borrow_clicked();
+                                            }
+                                        };
+                                    }
+                                };
+                            }
+
                         }
                     };
                 }
@@ -75,6 +169,62 @@ template $LibLibrarianView : Gtk.Widget {
                             model: Gtk.NoSelection {
                                 model: Gio.ListStore users {};
                             };
+
+                            Gtk.ColumnViewColumn {
+                                title: "Nume utilizator";
+                                resizable: true;
+
+                                factory: Gtk.SignalListItemFactory {
+                                    setup => $on_setup_label() swapped;
+                                    bind => $on_bind_user_name() swapped;
+                                };
+                            }
+
+                            Gtk.ColumnViewColumn {
+                                title: "E-mail";
+                                resizable: true;
+                                expand: true;
+
+                                factory: Gtk.SignalListItemFactory {
+                                    setup => $on_setup_label() swapped;
+                                    bind => $on_bind_user_email() swapped;
+                                };
+                            }
+
+                            Gtk.ColumnViewColumn {
+                                title: "Tip utilizator";
+                                resizable: true;
+
+                                factory: Gtk.SignalListItemFactory {
+                                    setup => $on_setup_label() swapped;
+                                    bind => $on_bind_user_type() swapped;
+                                };
+                            }
+
+                            Gtk.ColumnViewColumn {
+                                factory: Gtk.BuilderListItemFactory {
+                                    template ListItem {
+                                        child: Gtk.Box {
+                                            orientation: vertical;
+                                            spacing: 4;
+
+                                            Gtk.Button {
+                                                label: "Promovează la bibliotecar";
+                                                visible: bind $show_promote_button(template.item) as <bool>;
+
+                                                clicked => $on_promote_clicked();
+                                            }
+
+                                            Gtk.Button {
+                                                label: "Șterge cont";
+                                                styles ["destructive-action"]
+
+                                                clicked => $on_delete_user_clicked();
+                                            }
+                                        };
+                                    }
+                                };
+                            }
                         }
                     };
                 }
