@@ -7,26 +7,25 @@ pub trait WidgetUtilsExt {
     /// Disposes all children of a widget
     fn dispose_children(&self);
 
-    fn parent_of_type<P: StaticType + ObjectType + IsA<gtk::Widget>>(&self) -> P;
+    fn parent_of_type<P: StaticType + ObjectType + IsA<gtk::Widget>>(&self) -> Option<P>;
 }
 
 impl<T> WidgetUtilsExt for T
 where
     T: WidgetExt,
 {
-    #[track_caller]
-    fn parent_of_type<P: StaticType + ObjectType + IsA<gtk::Widget>>(&self) -> P {
+    fn parent_of_type<P: StaticType + ObjectType + IsA<gtk::Widget>>(&self) -> Option<P> {
         let mut iterator: gtk::Widget = self.clone().upcast();
 
         while let Some(parent) = iterator.parent() {
             if let Some(parent) = parent.downcast_ref::<P>() {
-                return parent.clone();
+                return Some(parent.clone());
             }
 
             iterator = parent;
         }
 
-        panic!("No widget of type: {:?}", P::static_type());
+        None
     }
 
     fn dispose_children(&self) {

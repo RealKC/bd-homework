@@ -15,13 +15,18 @@ mod imp {
         CompositeTemplate,
     };
     use schema::{
-        auth::{GetAllUsersReply, GetAllUsersRequest, User},
+        auth::{
+            DeleteUserReply, DeleteUserRequest, GetAllUsersReply, GetAllUsersRequest,
+            PromoteUserRequest, User,
+        },
         books::Book,
         LIBRARIAN, NORMAL_USER,
     };
 
     use crate::{
+        confirmation_dialog::ConfirmationDialogBuilder,
         http::{Session, SessionCookie},
+        widget_ext::WidgetUtilsExt,
         window::ShowToastExt,
     };
 
@@ -225,11 +230,19 @@ mod imp {
         #[template_callback]
         fn on_bind_user_name(&self, list_item: &gtk::ListItem, _: &gtk::SignalListItemFactory) {
             if let Some(object) = list_item.item().and_downcast::<glib::BoxedAnyObject>() {
+                let user = object.borrow::<User>();
+
+                let label = if user.id == self.cookie().cookie().id {
+                    format!("{} (eu)", user.name)
+                } else {
+                    user.name.clone()
+                };
+
                 list_item
                     .child()
                     .and_downcast::<gtk::Label>()
                     .unwrap()
-                    .set_label(&object.borrow::<User>().name);
+                    .set_label(&label);
             }
         }
 
@@ -273,34 +286,97 @@ mod imp {
         }
 
         #[template_callback]
-        fn on_promote_clicked(_: &gtk::Button, list_item: &gtk::ListItem) {}
+        fn on_promote_clicked(button: gtk::Button, list_item: gtk::ListItem) {
+            let dialog = ConfirmationDialogBuilder::default()
+                .title("Confirmare promovare utilizator")
+                .heading("Ești sigur că vrei să promovezi acest utilizator la bibliotecar?")
+                .body("Acest utilizator va avea aceleași drepturi ca dvs.")
+                .confirm_text("Promovează")
+                .action_is_destructive(true)
+                .on_confirmation(move || {
+                    let librarian_view = button.parent_of_type::<super::LibrarianView>();
+                    let user_id = list_item
+                        .item()
+                        .and_downcast::<BoxedAnyObject>()
+                        .map(|obj| obj.borrow::<User>().id)
+                        .unwrap();
+
+                    async move {
+                        librarian_view
+                            .unwrap()
+                            .imp()
+                            .promote_user_account(user_id)
+                            .await;
+                    }
+                })
+                .build();
+
+            dialog.present();
+        }
+
+        async fn promote_user_account(&self, user_id: i64) {
+            let request = PromoteUserRequest {
+                user_to_be_promoted: user_id,
+                cookie: self.cookie().cookie().clone(),
+            };
+            let reply = self
+                .soup_session()
+                .post::<()>(request, "/auth/promote-user")
+                .await;
+            if let Err(reply) = reply {
+                self.obj()
+                    .show_toast_msg("Nu s-a putut realiza promovarea utilizatorului");
+                g_warning!("biblioteca", "Failed to promote user: {}", reply);
+                return;
+            }
+
+            self.refresh_users().await;
+        }
 
         #[template_callback]
-        fn on_delete_user_clicked(button: &gtk::Button, list_item: &gtk::ListItem) {
-            const CANCEL: &str = "cancel";
-            const DELETE: &str = "delete";
-
-            let dialog = adw::MessageDialog::builder()
+        fn on_delete_user_clicked(button: gtk::Button, list_item: gtk::ListItem) {
+            let dialog = ConfirmationDialogBuilder::default()
                 .title("Confirmare ștergere cont")
                 .heading("Ești sigur că vrei să ștergi utilizatorul?")
                 .body("Această acțiune este ireversibilă și, în cocordanță cu RGPD, toate datele utilizatorului vor fi șterse.")
+                .confirm_text("Șterge contul")
+                .on_confirmation(move || {
+                    let librarian_view = button.parent_of_type::<super::LibrarianView>();
+                    let user_id = list_item
+                        .item()
+                        .and_downcast::<BoxedAnyObject>()
+                        .map(|obj| obj.borrow::<User>().id)
+                        .unwrap();
+
+                    async move {
+                        librarian_view.unwrap().imp().delete_user_account(user_id).await;
+                    }
+                })
                 .build();
 
-            dialog.add_response(CANCEL, "Anulează");
-            dialog.set_default_response(Some(CANCEL));
-            dialog.set_close_response(CANCEL);
-
-            dialog.add_response(DELETE, "Șterge contul");
-            dialog.set_response_appearance(DELETE, adw::ResponseAppearance::Destructive);
-
-            dialog.connect_response(None, {
-                let button = button.clone();
-                move |_, response| {
-                    println!("{response}: {button:?}");
-                }
-            });
-
             dialog.present();
+        }
+
+        async fn delete_user_account(&self, user_id: i64) {
+            let request = DeleteUserRequest {
+                user_to_be_deleted: user_id,
+                cookie: self.cookie().cookie().clone(),
+            };
+            let reply = self
+                .soup_session()
+                .post::<DeleteUserReply>(request, "/auth/delete-user")
+                .await;
+            match reply {
+                Ok(reply) => match reply {
+                    DeleteUserReply::Ok => self.refresh_users().await,
+                    DeleteUserReply::UsersStillHadBooks => self.obj().show_toast_msg("Nu s-a putut realiza ștergerea contului deoarece utilizatorul încă are cărți împrumutate"),
+                    DeleteUserReply::CannotDeleteSelf => self.obj().show_toast_msg("Contul propriu nu poate fi șters în acest fel")
+                },
+                Err(err) => {
+                    self.obj().show_toast_msg("Nu s-a putut realiza ștergerea contului");
+                    g_warning!("biblioteca", "Failed to delete account: {err}")
+                },
+            }
         }
     }
 }
