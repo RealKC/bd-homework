@@ -71,6 +71,15 @@ mod imp {
         }
 
         #[template_callback]
+        fn on_unmap(&self) {
+            self.login_email.set_text("");
+            self.login_password.set_text("");
+            self.signup_name.set_text("");
+            self.signup_email.set_text("");
+            self.signup_password.set_text("");
+        }
+
+        #[template_callback]
         async fn on_login_clicked(&self, _: gtk::Button) {
             let password = self.login_password.text().to_string();
             let request = Login {

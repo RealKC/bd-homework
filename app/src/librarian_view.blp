@@ -38,6 +38,13 @@ template $LibLibrarianView : Gtk.Widget {
 
                     clicked => $on_new_book_clicked() swapped;
                 }
+
+                Gtk.Button {
+                    icon-name: "application-exit-symbolic";
+                    tooltip-text: "Deconectare";
+                    styles ["destructive-action"]
+                    action-name: "win.logout";
+                }
             }
         }
 

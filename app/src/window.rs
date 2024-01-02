@@ -74,7 +74,7 @@ mod imp {
 
         #[property(get)]
         soup_session: Session,
-        #[property(get, set)]
+        #[property(get, set, nullable)]
         session_cookie: RefCell<Option<SessionCookie>>,
     }
 
@@ -90,6 +90,8 @@ mod imp {
             UserView::ensure_type();
 
             klass.bind_template();
+
+            klass.install_action("win.logout", None, |this, _, _| this.imp().logout());
         }
 
         fn instance_init(obj: &glib::subclass::InitializingObject<Self>) {
@@ -108,20 +110,22 @@ mod imp {
     }
 
     impl LibWindow {
-        fn session_cookie(&self) -> SessionCookie {
-            self.obj().session_cookie().unwrap()
-        }
-
         fn session_cookie_changed(&self) {
-            let user_type = self.session_cookie().user_type();
-
-            println!("changed");
+            let Some(session_cookie) = self.obj().session_cookie() else {
+                return;
+            };
+            let user_type = session_cookie.user_type();
 
             if user_type == NORMAL_USER {
                 self.stack.set_visible_child_name("user-view");
             } else if user_type == LIBRARIAN {
                 self.stack.set_visible_child_name("librarian-view");
             }
+        }
+
+        fn logout(&self) {
+            self.stack.set_visible_child_name("login");
+            self.obj().set_session_cookie(None::<SessionCookie>);
         }
     }
 
