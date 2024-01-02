@@ -10,6 +10,7 @@ use sqlx::{sqlite::SqliteConnectOptions, SqlitePool};
 mod auth;
 mod books;
 mod error;
+mod utils;
 
 #[tokio::main]
 async fn main() {
