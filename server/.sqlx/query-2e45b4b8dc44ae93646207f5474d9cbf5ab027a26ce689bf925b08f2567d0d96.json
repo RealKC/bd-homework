@@ -1,6 +1,6 @@
 {
   "db_name": "SQLite",
-  "query": "\nSELECT d.borrow_id, b.book_id, d.valid_until, d.chapters_read\nFROM Borrows b JOIN BorrowData d\nWHERE b.user_id = ?\n    ",
+  "query": "\nSELECT d.borrow_id, b.book_id, d.valid_until, d.chapters_read\nFROM Borrows b JOIN BorrowData d ON b.borrow_id = d.borrow_id\nWHERE b.user_id = ?\n    ",
   "describe": {
     "columns": [
       {
@@ -29,10 +29,10 @@
     },
     "nullable": [
       false,
-      true,
+      false,
       false,
       false
     ]
   },
-  "hash": "62cade53b1eb773ea2ada711e7b7e09b6f57f93390ce53a08de316efae7c2baa"
+  "hash": "2e45b4b8dc44ae93646207f5474d9cbf5ab027a26ce689bf925b08f2567d0d96"
 }

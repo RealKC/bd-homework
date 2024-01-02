@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "SELECT type FROM Users WHERE user_id = ?",
+  "describe": {
+    "columns": [
+      {
+        "name": "type",
+        "ordinal": 0,
+        "type_info": "Int64"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "5c22696a52bb7855416b239425c22295210976976508677b52d616ea6171a04e"
+}
