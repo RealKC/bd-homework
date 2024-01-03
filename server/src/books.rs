@@ -1,5 +1,7 @@
+use std::collections::HashMap;
+
 use axum::{
-    extract::{Path, State},
+    extract::{Path, Query, State},
     http::StatusCode,
     Json,
 };
@@ -273,6 +275,34 @@ UPDATE BorrowData
 SET valid_until = unixepoch()
 WHERE borrow_id = ?
     "#,
+        borrow_id
+    )
+    .execute(&pool)
+    .await
+    .http_status_error(StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    Ok(())
+}
+
+pub async fn lengthen_borrow_by(
+    Path(borrow_id): Path<i64>,
+    Query(params): Query<HashMap<String, i64>>,
+    State(pool): State<SqlitePool>,
+    Json(cookie): Json<session::Cookie>,
+) -> Result<(), RouteError> {
+    verify_user_is_librarian(&pool, cookie).await?;
+
+    let Some(days) = params.get("days") else {
+        return Err(RouteError::new_bad_request());
+    };
+
+    sqlx::query!(
+        r#"
+UPDATE BorrowData
+SET valid_until = unixepoch(valid_until, 'unixepoch', '+' || ? || ' days')
+WHERE borrow_id = ?
+    "#,
+        days,
         borrow_id
     )
     .execute(&pool)
