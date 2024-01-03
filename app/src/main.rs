@@ -1,6 +1,7 @@
 use adw::{glib, prelude::*, Application};
 use window::LibWindow;
 
+mod book_details;
 mod confirmation_dialog;
 mod http;
 mod librarian_view;

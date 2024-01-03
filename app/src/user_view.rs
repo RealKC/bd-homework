@@ -17,6 +17,7 @@ mod imp {
     use schema::books::{Book, BorrowReply, BorrowRequest, BorrowedBook, BorrowedByReply};
 
     use crate::{
+        book_details::BookDetailsWindow,
         http::{Session, SessionCookie},
         window::ShowToastExt,
     };
@@ -219,7 +220,21 @@ mod imp {
 
         #[template_callback]
         fn on_show_book_information(&self, position: u32, _: &gtk::ColumnView) {
-            println!("Gonna show info about book @ {position}");
+            let Some(book) = self
+                .all_books
+                .item(position)
+                .and_downcast::<BoxedAnyObject>()
+            else {
+                g_warning!(
+                    "biblioteca",
+                    "on_show_book_information for {} but there was no item at that position",
+                    position
+                );
+                return;
+            };
+            let book = book.borrow::<Book>();
+
+            BookDetailsWindow::new(&book).present();
         }
 
         async fn borrow_book(&self, book: Book) {

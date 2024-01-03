@@ -53,6 +53,7 @@ template $LibUserView : Gtk.Widget {
                     child: Gtk.ScrolledWindow {
                         Gtk.ColumnView {
                             reorderable: false;
+                            single-click-activate: true;
 
                             model: Gtk.NoSelection {
                                 model: Gio.ListStore all_books {};
