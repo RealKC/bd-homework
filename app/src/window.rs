@@ -2,7 +2,6 @@ use adw::{
     gio,
     glib::{self, Cast, IsA},
     prelude::*,
-    subclass::prelude::*,
 };
 
 glib::wrapper! {
