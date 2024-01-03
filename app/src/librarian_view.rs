@@ -247,17 +247,37 @@ mod imp {
         }
 
         #[template_callback]
-        fn on_edit_book_clicked(_: &gtk::Button, list_item: &gtk::ListItem) {
-            if let Some(object) = list_item.item().and_downcast::<glib::BoxedAnyObject>() {
-                println!("TODO: Book edit dialog: {:?}", object);
-            }
+        fn on_edit_book_clicked(button: gtk::Button, list_item: gtk::ListItem) {
+            println!("{button:?} {list_item:?}");
         }
 
         #[template_callback]
-        fn on_delete_book_clicked(_: &gtk::Button, list_item: &gtk::ListItem) {
-            if let Some(object) = list_item.item().and_downcast::<glib::BoxedAnyObject>() {
-                println!("TODO: Delete book dialog: {:?}", object);
-            }
+        fn on_delete_book_clicked(button: gtk::Button, list_item: gtk::ListItem) {
+            let dialog = ConfirmationDialogBuilder::default()
+                .title("Ești sigur?")
+                .heading("Ești sigur că vrei să ștergi această carte?")
+                .body("Această acțiune este ireversibilă")
+                .confirm_text("Șterge cartea")
+                .action_is_destructive(true)
+                .on_confirmation(move || {
+                    let this = button.parent_of_type::<super::LibrarianView>().unwrap();
+                    let borrow_id = list_item
+                        .item()
+                        .and_downcast::<BoxedAnyObject>()
+                        .map(|obj| obj.borrow::<Book>().book_id)
+                        .unwrap();
+
+                    async move {
+                        this.imp().delete_book(borrow_id).await;
+                    }
+                })
+                .build();
+
+            dialog.present();
+        }
+
+        async fn delete_book(&self, book_id: i64) {
+            println!("{book_id}")
         }
 
         // --- BORROWS VIEW ---
