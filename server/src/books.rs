@@ -311,3 +311,13 @@ WHERE borrow_id = ?
 
     Ok(())
 }
+
+pub async fn delete_book(
+    Path(borrow_id): Path<i64>,
+    State(pool): State<SqlitePool>,
+    Json(cookie): Json<session::Cookie>,
+) -> Result<(), RouteError> {
+    verify_user_is_librarian(&pool, cookie).await?;
+
+    Ok(())
+}
