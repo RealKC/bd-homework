@@ -39,8 +39,8 @@ where
         while let Some(parent) = widget.parent() {
             widget = parent;
 
-            if let Some(lib_window) = widget.downcast_ref::<LibWindow>() {
-                lib_window.show_toast(toast);
+            if let Some(toast_overlay) = widget.downcast_ref::<adw::ToastOverlay>() {
+                toast_overlay.add_toast(toast);
                 return;
             }
         }
