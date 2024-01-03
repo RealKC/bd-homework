@@ -29,6 +29,7 @@ mod imp {
     use crate::{
         confirmation_dialog::ConfirmationDialogBuilder,
         http::{Session, SessionCookie},
+        time,
         widget_ext::WidgetUtilsExt,
         window::ShowToastExt,
     };
@@ -305,7 +306,7 @@ mod imp {
             if let Some(borrow) = list_item.item().and_downcast::<BoxedAnyObject>() {
                 let borrow = borrow.borrow::<Borrow>();
                 let valid_until = glib::DateTime::from_unix_local(borrow.valid_until).unwrap();
-                let now = glib::DateTime::now(&glib::TimeZone::local()).unwrap();
+                let now = time::now();
                 let remaining_days = valid_until.difference(&now).as_days();
 
                 let colour = if remaining_days <= 3 {
@@ -314,7 +315,7 @@ mod imp {
                     ""
                 };
 
-                let valid_until = valid_until.format("%d %B %Y").unwrap();
+                let valid_until = time::format_date(&valid_until);
                 let label = match remaining_days.cmp(&0) {
                     Ordering::Greater => format!(
                         "{valid_until} (<span {colour}>{remaining_days} zile rămase</span>)",
@@ -346,13 +347,13 @@ mod imp {
                 .unwrap()
                 .add_days(30)
                 .unwrap();
-            let now = glib::DateTime::now(&glib::TimeZone::local()).unwrap();
+            let now = time::now();
             let remaining_days = valid_until.difference(&now).as_days();
 
             let dialog = ConfirmationDialogBuilder::default()
                 .title("Ești sigur?")
                 .heading("Ești sigur că vrei să lungești durata acestui împrumut?")
-                .body(format!("Noua data la care va trebui înapoiată cartea este {} (în {remaining_days} de zile)", valid_until.format("%d %B %Y").unwrap()))
+                .body(format!("Noua data la care va trebui înapoiată cartea este {} (în {remaining_days} de zile)", time::format_date(&valid_until)))
                 .confirm_text("Da")
                 .on_confirmation(move || {
                     let this = button.parent_of_type::<super::LibrarianView>().unwrap();

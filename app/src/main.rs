@@ -5,6 +5,7 @@ mod confirmation_dialog;
 mod http;
 mod librarian_view;
 mod login_page;
+mod time;
 mod user_view;
 mod widget_ext;
 mod window;
