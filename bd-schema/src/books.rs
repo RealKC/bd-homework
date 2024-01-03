@@ -58,3 +58,15 @@ pub struct Borrow {
 }
 
 pub type BorrowsReply = Vec<Borrow>;
+
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct ChangeBookDetailsRequest {
+    pub book_id: Option<Integer>,
+    pub title: Text,
+    pub author_id: Integer,
+    pub publish_date: Integer,
+    pub publisher: Text,
+    pub count: Integer,
+    pub synopsis: Text,
+    pub cookie: session::Cookie,
+}

@@ -5,7 +5,7 @@ use axum::{
 use chrono::{Days, Local};
 use schema::books::{
     Author, Book, Borrow, BorrowReply, BorrowRequest, BorrowedBook, BorrowedByReply, BorrowsReply,
-    BorrowsRequest,
+    BorrowsRequest, ChangeBookDetailsRequest,
 };
 use sqlx::SqlitePool;
 
@@ -204,4 +204,54 @@ FROM Borrows b JOIN BorrowData d ON b.borrow_id = d.borrow_id;
         .collect();
 
     Ok(Json(response))
+}
+
+pub async fn change_book_details(
+    State(pool): State<SqlitePool>,
+    Json(request): Json<ChangeBookDetailsRequest>,
+) -> Result<(), RouteError> {
+    verify_user_is_librarian(&pool, request.cookie).await?;
+
+    if let Some(book_id) = request.book_id {
+        sqlx::query!(
+            r#"
+UPDATE Books SET
+    title = ?,
+    author_id = ?,
+    publish_date = ?,
+    publisher = ?,
+    count = ?,
+    synopsis = ?
+WHERE book_id = ?
+        "#,
+            request.title,
+            request.author_id,
+            request.publish_date,
+            request.publisher,
+            request.count,
+            request.synopsis,
+            book_id
+        )
+        .execute(&pool)
+        .await
+        .http_internal_error("Failed to update book")?;
+    } else {
+        sqlx::query!(
+            r#"
+INSERT INTO Books(title, author_id, publish_date, publisher, count, synopsis, language)
+VALUES (?, ?, ?, ?, ?, ?, 'ro')
+        "#,
+            request.title,
+            request.author_id,
+            request.publish_date,
+            request.publisher,
+            request.count,
+            request.synopsis,
+        )
+        .execute(&pool)
+        .await
+        .http_internal_error("Failed to insert book")?;
+    }
+
+    Ok(())
 }
