@@ -26,7 +26,7 @@ pub struct GetAllUsersRequest {
     pub cookie: session::Cookie,
 }
 
-#[derive(Serialize, Deserialize, Default)]
+#[derive(Serialize, Deserialize, Default, Clone)]
 pub struct User {
     pub id: Integer,
     pub name: Text,

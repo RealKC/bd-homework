@@ -33,6 +33,7 @@ async fn main() {
         .route("/", get(root))
         .route("/books", get(books::books))
         .route("/borrow", post(books::borrow))
+        .route("/borrows", post(books::borrows))
         .route("/borrowed-by/:user_id", post(books::borrowed_by))
         .nest("/auth", auth::router(pool.clone()))
         .fallback(fallback)

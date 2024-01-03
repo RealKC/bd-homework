@@ -3,10 +3,16 @@ use axum::{
     Json,
 };
 use chrono::{Days, Local};
-use schema::books::{Author, Book, BorrowReply, BorrowRequest, BorrowedBook, BorrowedByReply};
+use schema::books::{
+    Author, Book, Borrow, BorrowReply, BorrowRequest, BorrowedBook, BorrowedByReply, BorrowsReply,
+    BorrowsRequest,
+};
 use sqlx::SqlitePool;
 
-use crate::error::{IntoRouteError, RouteError};
+use crate::{
+    error::{IntoRouteError, RouteError},
+    utils::verify_user_is_librarian,
+};
 
 pub async fn books(State(pool): State<SqlitePool>) -> Result<Json<Vec<Book>>, RouteError> {
     let data = sqlx::query!(
@@ -146,4 +152,33 @@ WHERE b.user_id = ?
             })
             .collect(),
     ))
+}
+
+pub async fn borrows(
+    State(pool): State<SqlitePool>,
+    Json(request): Json<BorrowsRequest>,
+) -> Result<Json<BorrowsReply>, RouteError> {
+    verify_user_is_librarian(&pool, request.cookie).await?;
+
+    let records = sqlx::query!(
+        r"
+SELECT b.borrow_id, b.book_id, b.user_id, d.valid_until
+FROM Borrows b JOIN BorrowData d ON b.borrow_id = d.borrow_id;
+    "
+    )
+    .fetch_all(&pool)
+    .await
+    .http_internal_error("Failed to fetch borrows")?;
+
+    let response = records
+        .into_iter()
+        .map(|record| Borrow {
+            borrow_id: record.borrow_id,
+            book_id: record.book_id,
+            user_id: record.user_id,
+            valid_until: record.valid_until,
+        })
+        .collect();
+
+    Ok(Json(response))
 }

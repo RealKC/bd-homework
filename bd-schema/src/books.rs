@@ -43,3 +43,18 @@ pub struct BorrowedBook {
 }
 
 pub type BorrowedByReply = Vec<BorrowedBook>;
+
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct BorrowsRequest {
+    pub cookie: session::Cookie,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct Borrow {
+    pub borrow_id: Integer,
+    pub book_id: Integer,
+    pub user_id: Integer,
+    pub valid_until: Integer,
+}
+
+pub type BorrowsReply = Vec<Borrow>;
