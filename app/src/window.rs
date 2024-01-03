@@ -16,10 +16,6 @@ impl LibWindow {
     pub fn new(app: &adw::Application) -> Self {
         glib::Object::builder().property("application", app).build()
     }
-
-    fn show_toast(&self, toast: adw::Toast) {
-        self.imp().toast_overlay.add_toast(toast);
-    }
 }
 
 pub trait ShowToastExt {
