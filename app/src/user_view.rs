@@ -1,8 +1,15 @@
 use adw::glib;
+use gtk::glib::subclass::types::ObjectSubclassIsExt;
 
 glib::wrapper! {
     pub struct UserView(ObjectSubclass<imp::UserView>)
     @extends gtk::Widget;
+}
+
+impl UserView {
+    pub async fn borrow_book(&self, book_id: i64) {
+        self.imp().borrow_book(book_id).await;
+    }
 }
 
 mod imp {
@@ -211,7 +218,7 @@ mod imp {
                         let this = this.clone();
                         let book = book.clone();
                         MainContext::default().spawn_local(async move {
-                            this.imp().borrow_book(book.clone()).await;
+                            this.imp().borrow_book(book.book_id).await;
                         });
                     }
                 });
@@ -234,15 +241,13 @@ mod imp {
             };
             let book = book.borrow::<Book>();
 
-            BookDetailsWindow::new(&book).present();
+            BookDetailsWindow::new(&book, self.obj().clone()).present();
         }
 
-        async fn borrow_book(&self, book: Book) {
-            println!("time to borrow: {book:?}");
-
+        pub(super) async fn borrow_book(&self, book_id: i64) {
             let request = BorrowRequest {
                 cookie: self.cookie().cookie().clone(),
-                book_id: book.book_id,
+                book_id,
             };
 
             let reply = self

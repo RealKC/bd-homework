@@ -1,7 +1,7 @@
 use adw::glib;
 use schema::books::Book;
 
-use crate::time;
+use crate::{time, user_view::UserView};
 
 glib::wrapper! {
     pub struct BookDetailsWindow(ObjectSubclass<imp::BookDetailsWindow>)
@@ -9,8 +9,9 @@ glib::wrapper! {
 }
 
 impl BookDetailsWindow {
-    pub fn new(book: &Book) -> Self {
+    pub fn new(book: &Book, user_view: UserView) -> Self {
         glib::Object::builder()
+            .property("book-id", book.book_id)
             .property("title", &book.title)
             .property("author-name", &book.author.name)
             .property("author-date-of-birth", book.author.date_of_birth)
@@ -26,6 +27,7 @@ impl BookDetailsWindow {
             .property("publisher", &book.publisher)
             .property("count", &book.count.to_string())
             .property("can-be-borrowed", book.can_be_borrowed)
+            .property("user-view", user_view)
             .build()
     }
 }
@@ -38,16 +40,18 @@ mod imp {
 
     use adw::{prelude::*, subclass::prelude::*};
     use gtk::{
-        glib::{self, gformat, GString},
+        glib::{self, g_warning, gformat, GString, WeakRef},
         CompositeTemplate,
     };
 
-    use crate::time;
+    use crate::{time, user_view::UserView};
 
     #[derive(Default, Debug, CompositeTemplate, glib::Properties)]
     #[properties(wrapper_type = super::BookDetailsWindow)]
     #[template(file = "src/book_details.blp")]
     pub struct BookDetailsWindow {
+        #[property(get, set)]
+        book_id: RefCell<i64>,
         #[property(get, set)]
         title: RefCell<GString>,
         #[property(get, set)]
@@ -72,6 +76,8 @@ mod imp {
         count: RefCell<GString>,
         #[property(get, set)]
         can_be_borrowed: Cell<bool>,
+        #[property(get, set)]
+        user_view: WeakRef<UserView>,
     }
 
     #[glib::object_subclass]
@@ -140,6 +146,17 @@ mod imp {
                 }));
             }
             res
+        }
+
+        #[template_callback]
+        async fn on_borrow_clicked(&self) {
+            let Some(user_view) = self.user_view.upgrade() else {
+                g_warning!("biblioteca", "Failed to upgrade user_view, parent closed?");
+                return;
+            };
+
+            self.obj().close();
+            user_view.borrow_book(self.obj().book_id()).await;
         }
     }
 }

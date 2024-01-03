@@ -66,6 +66,8 @@ template $LibBookDetailsWindow : Adw.Window {
                 label: "Împrumută";
                 sensitive: bind template.can-be-borrowed;
                 styles ["suggested-action"]
+
+                clicked => $on_borrow_clicked() swapped;
             }
         };
     };
