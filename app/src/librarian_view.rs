@@ -378,7 +378,7 @@ mod imp {
                         "{valid_until} (<span {colour}>{remaining_days} zile rămase</span>)",
                     ),
                     Ordering::Equal => {
-                        format!(r#"{valid_until} (<span color="red" style="bold">astăzi</span>)"#)
+                        format!(r#"{valid_until} (<span color="red" weight="bold">astăzi</span>)"#)
                     }
                     Ordering::Less => format!(
                         r#"{valid_until} (<span weight="bold">întarziere de {} zile</span>)"#,
