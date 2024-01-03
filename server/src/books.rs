@@ -49,6 +49,29 @@ FROM Books b JOIN Authors a ON b.author_id = a.author_id;
     Ok(Json(data))
 }
 
+pub async fn authors(State(pool): State<SqlitePool>) -> Result<Json<Vec<Author>>, RouteError> {
+    let data = sqlx::query!(
+        r#"
+SELECT author_id, name
+FROM Authors;
+    "#
+    )
+    .fetch_all(&pool)
+    .await
+    .http_internal_error("Failed to fetch Authors")?
+    .into_iter()
+    .map(|record| Author {
+        author_id: record.author_id,
+        name: record.name,
+        date_of_birth: 0,
+        date_of_death: None,
+        description: "".into(),
+    })
+    .collect();
+
+    Ok(Json(data))
+}
+
 pub async fn borrow(
     State(pool): State<SqlitePool>,
     Json(request): Json<BorrowRequest>,

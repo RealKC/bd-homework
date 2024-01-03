@@ -31,6 +31,7 @@ async fn main() {
 
     let app = Router::new()
         .route("/", get(root))
+        .route("/authors", get(books::authors))
         .route("/books", get(books::books))
         .route("/borrow", post(books::borrow))
         .route("/borrows", post(books::borrows))
