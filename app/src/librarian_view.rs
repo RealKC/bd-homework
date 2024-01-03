@@ -6,7 +6,10 @@ glib::wrapper! {
 }
 
 mod imp {
-    use std::cell::{OnceCell, RefCell};
+    use std::{
+        cell::{OnceCell, RefCell},
+        cmp::Ordering,
+    };
 
     use adw::{glib, prelude::*, subclass::prelude::*};
     use gtk::{
@@ -19,7 +22,7 @@ mod imp {
             DeleteUserReply, DeleteUserRequest, GetAllUsersReply, GetAllUsersRequest,
             PromoteUserRequest, User,
         },
-        books::Book,
+        books::{Book, Borrow, BorrowsReply, BorrowsRequest},
         LIBRARIAN, NORMAL_USER,
     };
 
@@ -83,6 +86,7 @@ mod imp {
         async fn on_show(&self) {
             self.refresh_books().await;
             self.refresh_users().await;
+            self.refresh_borrows().await;
         }
 
         #[template_callback]
@@ -94,10 +98,30 @@ mod imp {
             if current_view == "all-books" {
                 self.refresh_books().await;
             } else if current_view == "borrows" {
-                // TODO:
+                self.refresh_books().await;
+                self.refresh_users().await;
+                self.refresh_borrows().await;
             } else if current_view == "users" {
                 self.refresh_users().await;
             }
+        }
+
+        fn book_with(&self, book_id: i64) -> Book {
+            self.all_books
+                .into_iter()
+                .map(|obj| obj.unwrap().downcast::<BoxedAnyObject>().unwrap())
+                .map(|obj| obj.borrow::<Book>().clone())
+                .find(|book| book.book_id == book_id)
+                .unwrap()
+        }
+
+        fn user_with(&self, user_id: i64) -> User {
+            self.users
+                .into_iter()
+                .map(|obj| obj.unwrap().downcast::<BoxedAnyObject>().unwrap())
+                .map(|obj| obj.borrow::<User>().clone())
+                .find(|user| user.id == user_id)
+                .unwrap()
         }
 
         async fn refresh_books(&self) {
@@ -142,6 +166,33 @@ mod imp {
                         "A apărut o eroare în timpul obținerii listei de utilizatori",
                     );
                     g_warning!("biblioteca", "Failed to fetch users: {err}")
+                }
+            }
+        }
+
+        async fn refresh_borrows(&self) {
+            let request = BorrowsRequest {
+                cookie: self.cookie().cookie().clone(),
+            };
+            let borrows = self
+                .soup_session()
+                .post::<BorrowsReply>(request, "/borrows")
+                .await;
+
+            match borrows {
+                Ok(borrows) => {
+                    self.borrows.remove_all();
+                    let borrows = borrows
+                        .into_iter()
+                        .map(BoxedAnyObject::new)
+                        .collect::<Vec<_>>();
+                    self.borrows.extend_from_slice(&borrows);
+                }
+                Err(err) => {
+                    self.obj().show_toast_msg(
+                        "A apărut o eroare în timpul obținerii listei de împrumuturi",
+                    );
+                    g_warning!("biblioteca", "Failed to fetch borrows: {err}")
                 }
             }
         }
@@ -208,14 +259,23 @@ mod imp {
             }
         }
 
-        // --- USERS VIEW ---
+        // --- BORROWS VIEW ---
         #[template_callback]
         fn on_bind_borrow_book_title(
             &self,
             list_item: &gtk::ListItem,
             _: &gtk::SignalListItemFactory,
         ) {
-            if let Some(object) = list_item.item().and_downcast::<glib::BoxedAnyObject>() {}
+            if let Some(borrow) = list_item.item().and_downcast::<BoxedAnyObject>() {
+                let book_id = borrow.borrow::<Borrow>().book_id;
+
+                let book = self.book_with(book_id);
+                list_item
+                    .child()
+                    .and_downcast::<gtk::Label>()
+                    .unwrap()
+                    .set_label(&book.title);
+            }
         }
 
         #[template_callback]
@@ -224,14 +284,121 @@ mod imp {
             list_item: &gtk::ListItem,
             _: &gtk::SignalListItemFactory,
         ) {
-            if let Some(object) = list_item.item().and_downcast::<glib::BoxedAnyObject>() {}
+            if let Some(borrow) = list_item.item().and_downcast::<BoxedAnyObject>() {
+                let user_id = borrow.borrow::<Borrow>().user_id;
+
+                let user = self.user_with(user_id);
+                list_item
+                    .child()
+                    .and_downcast::<gtk::Label>()
+                    .unwrap()
+                    .set_label(&user.name);
+            }
         }
 
         #[template_callback]
-        fn on_lenghten_borrown_clicked(_: &gtk::Button, list_item: &gtk::ListItem) {}
+        fn on_bind_borrow_valid_until(
+            &self,
+            list_item: &gtk::ListItem,
+            _: &gtk::SignalListItemFactory,
+        ) {
+            if let Some(borrow) = list_item.item().and_downcast::<BoxedAnyObject>() {
+                let borrow = borrow.borrow::<Borrow>();
+                let valid_until = glib::DateTime::from_unix_local(borrow.valid_until).unwrap();
+                let now = glib::DateTime::now(&glib::TimeZone::local()).unwrap();
+                let remaining_days = valid_until.difference(&now).as_days();
+
+                let colour = if remaining_days <= 3 {
+                    r#"color="red""#
+                } else {
+                    ""
+                };
+
+                let valid_until = valid_until.format("%d %B %Y").unwrap();
+                let label = match remaining_days.cmp(&0) {
+                    Ordering::Greater => format!(
+                        "{valid_until} (<span {colour}>{remaining_days} zile rămase</span>)",
+                    ),
+                    Ordering::Equal => {
+                        format!(r#"{valid_until} (<span color="red" style="bold">astăzi</span>)"#)
+                    }
+                    Ordering::Less => format!(
+                        r#"{valid_until} (<span weight="bold">întarziere de {} zile</span>)"#,
+                        -remaining_days
+                    ),
+                };
+
+                list_item
+                    .child()
+                    .and_downcast::<gtk::Label>()
+                    .unwrap()
+                    .set_markup(&label);
+            }
+        }
 
         #[template_callback]
-        fn on_finish_borrow_clicked(_: &gtk::Button, list_item: &gtk::ListItem) {}
+        fn on_lengthen_borrow_clicked(button: gtk::Button, list_item: gtk::ListItem) {
+            let Some(borrow) = list_item.item().and_downcast::<BoxedAnyObject>() else {
+                return;
+            };
+            let borrow = borrow.borrow::<Borrow>().clone();
+            let valid_until = glib::DateTime::from_unix_local(borrow.valid_until)
+                .unwrap()
+                .add_days(30)
+                .unwrap();
+            let now = glib::DateTime::now(&glib::TimeZone::local()).unwrap();
+            let remaining_days = valid_until.difference(&now).as_days();
+
+            let dialog = ConfirmationDialogBuilder::default()
+                .title("Ești sigur?")
+                .heading("Ești sigur că vrei să lungești durata acestui împrumut?")
+                .body(format!("Noua data la care va trebui înapoiată cartea este {} (în {remaining_days} de zile)", valid_until.format("%d %B %Y").unwrap()))
+                .confirm_text("Da")
+                .on_confirmation(move || {
+                    let this = button.parent_of_type::<super::LibrarianView>().unwrap();
+                    let borrow_id = borrow.borrow_id;
+
+                    async move {
+                        this.imp().lengthen_borrow(borrow_id).await;
+                    }
+                })
+                .build();
+
+            dialog.present();
+        }
+
+        async fn lengthen_borrow(&self, borrow_id: i64) {
+            println!("Gonna end borrow: {borrow_id}")
+        }
+
+        #[template_callback]
+        fn on_finish_borrow_clicked(button: gtk::Button, list_item: gtk::ListItem) {
+            let dialog = ConfirmationDialogBuilder::default()
+                .title("Ești sigur?")
+                .heading("Ești sigur că vrei să închei împrumutul utilizatorului acum?")
+                .body("Acest lucru îl va forța să înapoieze cartea astăzi")
+                .confirm_text("Încheie împrumut")
+                .action_is_destructive(true)
+                .on_confirmation(move || {
+                    let this = button.parent_of_type::<super::LibrarianView>().unwrap();
+                    let borrow_id = list_item
+                        .item()
+                        .and_downcast::<BoxedAnyObject>()
+                        .map(|obj| obj.borrow::<Borrow>().borrow_id)
+                        .unwrap();
+
+                    async move {
+                        this.imp().finish_borrow(borrow_id).await;
+                    }
+                })
+                .build();
+
+            dialog.present();
+        }
+
+        async fn finish_borrow(&self, borrow_id: i64) {
+            println!("Gonna end borrow: {borrow_id}")
+        }
 
         // --- USERS VIEW ---
 

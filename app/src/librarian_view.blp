@@ -154,6 +154,16 @@ template $LibLibrarianView : Gtk.Widget {
                             }
 
                             Gtk.ColumnViewColumn {
+                                title: "Trebuie înapoiată până la data";
+                                resizable: true;
+
+                                factory: Gtk.SignalListItemFactory {
+                                    setup => $on_setup_label() swapped;
+                                    bind => $on_bind_borrow_valid_until() swapped;
+                                };
+                            }
+
+                            Gtk.ColumnViewColumn {
                                 factory: Gtk.BuilderListItemFactory {
                                     template ListItem {
                                         child: Gtk.Box {
@@ -168,6 +178,7 @@ template $LibLibrarianView : Gtk.Widget {
 
                                             Gtk.Button {
                                                 label: "Termină împrumutul acum";
+                                                styles ["destructive-action"]
                                                 clicked => $on_finish_borrow_clicked();
                                             }
                                         };
