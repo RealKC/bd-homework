@@ -1,0 +1,92 @@
+using Gtk 4.0;
+using Adw 1;
+using Gio 2.0;
+
+template $LibEditBookDetailsWindow : Adw.Window {
+    resizable: false;
+
+    show => $on_show();
+
+    content: Adw.ToolbarView {
+        [top]
+        Adw.HeaderBar {
+            visible: true;
+            show-back-button: false;
+            title-widget: Adw.WindowTitle {
+                title: bind template.title;
+                subtitle: bind template.author-name;
+            };
+        }
+
+        content: Adw.ToastOverlay {
+            Gtk.Box {
+                orientation: vertical;
+                spacing: 12;
+                margin-top: 10;
+                margin-bottom: 10;
+                margin-start: 10;
+                margin-end: 10;
+
+                Adw.PreferencesGroup{
+                    Adw.EntryRow title_entry {
+                        title: "Titlu";
+                    }
+
+                    Adw.EntryRow synopsis_entry {
+                        title: "Rezumat";
+                    }
+
+                    Adw.EntryRow count_entry {
+                        title: "# Copii în bibliotecă";
+                        input-purpose: digits;
+                    }
+
+                    Adw.ComboRow authors_dropdown {
+                        title: "Autor";
+                        model: Gio.ListStore authors {};
+
+                        factory: Gtk.BuilderListItemFactory {
+                            template ListItem {
+                                child: Gtk.Box{Gtk.Label {
+                                    label: bind $author_name(template.item) as <string>;
+                                }};
+                            }
+                        };
+                    }
+                }
+
+                Adw.PreferencesGroup {
+                        title: "Detalii despre publicare";
+
+                        Adw.EntryRow publisher_entry {
+                            title: "Editura";
+                        }
+
+                        Adw.EntryRow day_entry {
+                            title: "Ziua publicării";
+                            input-purpose: digits;
+                        }
+
+                        Adw.ComboRow month_entry {
+                            title: "Luna publicării";
+                            model: Gtk.StringList {
+                                strings ["ianuarie", "februarie", "martie", "aprilie", "mai", "iunie", "iulie", "august", "septembrie", "octombrie", "decembrie"]
+                            };
+                        }
+
+                        Adw.EntryRow year_entry {
+                            title: "Anul publicării";
+                            input-purpose: digits;
+                        }
+                    }
+
+                Gtk.Button {
+                    label: "Salvează schimbările";
+                    styles ["suggested-action"]
+
+                    clicked => $on_save_changes_clicked() swapped;
+                }
+            }
+        };
+    };
+}

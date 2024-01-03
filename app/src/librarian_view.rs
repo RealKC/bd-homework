@@ -1,8 +1,15 @@
 use adw::glib;
+use gtk::glib::subclass::types::ObjectSubclassIsExt;
 
 glib::wrapper! {
     pub struct LibrarianView(ObjectSubclass<imp::LibrarianView>)
     @extends gtk::Widget;
+}
+
+impl LibrarianView {
+    pub async fn refresh_books(&self) {
+        self.imp().refresh_books().await;
+    }
 }
 
 mod imp {
@@ -28,6 +35,7 @@ mod imp {
 
     use crate::{
         confirmation_dialog::ConfirmationDialogBuilder,
+        edit_book_details::EditBookDetailsWindow,
         http::{Session, SessionCookie},
         time,
         widget_ext::WidgetUtilsExt,
@@ -125,7 +133,7 @@ mod imp {
                 .unwrap()
         }
 
-        async fn refresh_books(&self) {
+        pub(super) async fn refresh_books(&self) {
             let books = self.soup_session().get::<Vec<Book>>("/books").await;
 
             match books {
@@ -211,7 +219,9 @@ mod imp {
         }
 
         #[template_callback]
-        fn on_new_book_clicked(&self, _: gtk::Button) {}
+        fn on_new_book_clicked(&self, _: gtk::Button) {
+            EditBookDetailsWindow::new(None, self.obj().clone()).present();
+        }
 
         #[template_callback]
         fn on_bind_title(&self, list_item: &gtk::ListItem, _: &gtk::SignalListItemFactory) {
@@ -248,7 +258,14 @@ mod imp {
 
         #[template_callback]
         fn on_edit_book_clicked(button: gtk::Button, list_item: gtk::ListItem) {
-            println!("{button:?} {list_item:?}");
+            EditBookDetailsWindow::new(
+                list_item
+                    .item()
+                    .and_downcast::<BoxedAnyObject>()
+                    .map(|obj| obj.borrow::<Book>().clone()),
+                button.parent_of_type::<super::LibrarianView>().unwrap(),
+            )
+            .present();
         }
 
         #[template_callback]

@@ -3,6 +3,7 @@ use window::LibWindow;
 
 mod book_details;
 mod confirmation_dialog;
+mod edit_book_details;
 mod http;
 mod librarian_view;
 mod login_page;
