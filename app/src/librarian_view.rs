@@ -426,7 +426,18 @@ mod imp {
         }
 
         async fn lengthen_borrow(&self, borrow_id: i64) {
-            println!("Gonna end borrow: {borrow_id}")
+            let endpoint = format!("/lengthen-borrow/{borrow_id}?days=30");
+            if let Err(err) = self
+                .soup_session()
+                .post::<()>(self.cookie().cookie(), &endpoint)
+                .await
+            {
+                self.obj()
+                    .show_toast_msg("Prelungirea duratei împrumutului a eșuat");
+                g_warning!("biblioteca", "Error on POST to {}: {}", endpoint, err);
+            } else {
+                self.refresh_borrows().await;
+            }
         }
 
         #[template_callback]
@@ -455,7 +466,17 @@ mod imp {
         }
 
         async fn finish_borrow(&self, borrow_id: i64) {
-            println!("Gonna end borrow: {borrow_id}")
+            let endpoint = format!("/end-borrow/{borrow_id}");
+            if let Err(err) = self
+                .soup_session()
+                .post::<()>(self.cookie().cookie(), &endpoint)
+                .await
+            {
+                self.obj().show_toast_msg("Terminarea împrumutului a eșuat");
+                g_warning!("biblioteca", "Error on POST to {}: {}", endpoint, err);
+            } else {
+                self.refresh_borrows().await;
+            }
         }
 
         // --- USERS VIEW ---
