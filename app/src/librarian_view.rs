@@ -32,11 +32,12 @@ mod imp {
         books::{Book, Borrow, BorrowsReply, BorrowsRequest},
         LIBRARIAN, NORMAL_USER,
     };
+    use soup::Status;
 
     use crate::{
         confirmation_dialog::ConfirmationDialogBuilder,
         edit_book_details::EditBookDetailsWindow,
-        http::{Session, SessionCookie},
+        http::{Error, Session, SessionCookie},
         time,
         widget_ext::WidgetUtilsExt,
         window::ShowToastExt,
@@ -294,7 +295,26 @@ mod imp {
         }
 
         async fn delete_book(&self, book_id: i64) {
-            println!("{book_id}")
+            if let Err(err) = self
+                .soup_session()
+                .post::<()>(self.cookie().cookie(), &format!("/delete-book/{book_id}"))
+                .await
+            {
+                let extras = if let Error::Api { status, .. } = err {
+                    if status == Status::BadRequest {
+                        "(cartea este în împrumut)"
+                    } else {
+                        ""
+                    }
+                } else {
+                    ""
+                };
+
+                self.obj()
+                    .show_toast_msg(&format!("Ștergerea cărții a eșuat {extras}"));
+            } else {
+                self.refresh_books().await;
+            }
         }
 
         // --- BORROWS VIEW ---
