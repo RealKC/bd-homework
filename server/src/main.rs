@@ -30,7 +30,6 @@ async fn main() {
         .expect("failed to run migrations");
 
     let app = Router::new()
-        .route("/", get(root))
         .route("/authors", get(books::authors))
         .route("/books", get(books::books))
         .route("/borrow", post(books::borrow))
@@ -43,10 +42,6 @@ async fn main() {
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
     axum::serve(listener, app).await.unwrap();
-}
-
-async fn root() -> &'static str {
-    "Hello BD project"
 }
 
 async fn fallback() -> RouteError {
