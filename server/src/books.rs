@@ -1,11 +1,15 @@
 use axum::{
     extract::{Path, State},
+    http::StatusCode,
     Json,
 };
 use chrono::{Days, Local};
-use schema::books::{
-    Author, Book, Borrow, BorrowReply, BorrowRequest, BorrowedBook, BorrowedByReply, BorrowsReply,
-    BorrowsRequest, ChangeBookDetailsRequest,
+use schema::{
+    books::{
+        Author, Book, Borrow, BorrowReply, BorrowRequest, BorrowedBook, BorrowedByReply,
+        BorrowsReply, BorrowsRequest, ChangeBookDetailsRequest,
+    },
+    session,
 };
 use sqlx::SqlitePool;
 
@@ -252,6 +256,28 @@ VALUES (?, ?, ?, ?, ?, ?, 'ro')
         .await
         .http_internal_error("Failed to insert book")?;
     }
+
+    Ok(())
+}
+
+pub async fn end_borrow(
+    Path(borrow_id): Path<i64>,
+    State(pool): State<SqlitePool>,
+    Json(cookie): Json<session::Cookie>,
+) -> Result<(), RouteError> {
+    verify_user_is_librarian(&pool, cookie).await?;
+
+    sqlx::query!(
+        r#"
+UPDATE BorrowData
+SET valid_until = unixepoch()
+WHERE borrow_id = ?
+    "#,
+        borrow_id
+    )
+    .execute(&pool)
+    .await
+    .http_status_error(StatusCode::INTERNAL_SERVER_ERROR)?;
 
     Ok(())
 }
