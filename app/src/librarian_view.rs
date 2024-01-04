@@ -225,6 +225,9 @@ mod imp {
         }
 
         #[template_callback]
+        fn on_new_author_clicked(&self, _: gtk::Button) {}
+
+        #[template_callback]
         fn on_bind_title(&self, list_item: &gtk::ListItem, _: &gtk::SignalListItemFactory) {
             if let Some(object) = list_item.item().and_downcast::<glib::BoxedAnyObject>() {
                 list_item

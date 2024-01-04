@@ -40,6 +40,14 @@ template $LibLibrarianView : Gtk.Widget {
                 }
 
                 Gtk.Button {
+                    icon-name: "contact-new-symbolic";
+                    tooltip-text: "Adaugă un autor nou";
+                    visible: bind $show_new_book_button(view_stack.visible-child-name) as <bool>;
+
+                    clicked => $on_new_author_clicked() swapped;
+                }
+
+                Gtk.Button {
                     icon-name: "application-exit-symbolic";
                     tooltip-text: "Deconectare";
                     styles ["destructive-action"]
