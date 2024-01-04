@@ -48,16 +48,23 @@
 
     Pentru bibliotecari, următoarele funcționalități sunt oferite:
     \begin{itemize}
-        \item
+        \item abilitatea de a vedea toate cărțile, a le edita și a le șterge
+        \item abilitatea de a adăuga autori
+        \item abilitatea de a termina și prelungi durata împrumuturilor cărților
+        \item abilitatea de a șterge utilizatori
     \end{itemize}
 
     \subsection{Arhitectura proiectului}
 
     Aplicația se încadrează în categoria aplicațiilor CRUD.
 
-    Aplicația este separată în două programe: un server web și o aplicație desktop care comunică
-    prin un API REST. Aplicația desktop nu are acces la baza de date, lucru rezervat exclusiv
-    serverului.
+    Aplicația este separată în trei module:
+    \begin{itemize}
+        \item o librărie comună (în folderul \texttt{bd-schema}) care conține definițiile structurilor
+        transmise prin API
+        \item un server web REST (în folderul \texttt{server})
+        \item o aplicație desktop (în folderul \texttt{app}) care comunică cu server-ul; aplicația nu are access la baza de date
+    \end{itemize}
 
     \section{Tehnologii folosite}
 
@@ -77,7 +84,6 @@
     a rutelor este:
     \begin{minted}[linenos, breaklines]{rust}
 let app = Router::new()
-    .route("/", get(root))
     .route("/books", get(books::books))
     .route("/borrow", post(books::borrow))
     .route("/borrowed-by/:user_id", post(books::borrowed_by))
@@ -134,11 +140,22 @@ async fn create_account(
     \begin{figure}[H]
         \includegraphics[width=\linewidth]{ER-Diagram}
         \centering
+        \caption{Diagrama ER}
     \end{figure}
 
     Mențiuni despre normalizarea datelor:
     \begin{itemize}
-        \item
+        \item prima formă normală --- toate tabele conțin coloane ce au valori atomice și nu conțin grupuri care se repetă
+        \item a doua formă normală --- toate tabele cu chei primare, au chei primare formate dintr-o singură coloană și sunt
+        în prima formă normală tabela \texttt{BorrowData} este și ea în a doua formă normala deoarece are o singură cheie
+        candidat \texttt{borrow\_id} și este în prima formă normală
+        \item a treia formă normală --- toate tabelele sunt în a doua formă normală și toate coloanele non-cheie sunt direct
+        dependente de cheia candidat
+        \item forma normală Boyce-Codd --- nu am luat-o în considerare la proiectare bazei de date și nu cred că a apărut accidental;
+        nu consider acest lucru un dezavantaj
+        \item a patra formă normală și a cincea formă normală --- probabil că nu, nu au fost luate în considerare la proiectarea
+        bazei de date
+        \item nu a fost necesară încălcarea deliberată a unei forme normale pentru performanță deoarece aplicația este mică
     \end{itemize}
     Constrângeri utilizate în baza de date:
     \begin{itemize}
@@ -154,5 +171,147 @@ async fn create_account(
         \item o constrângere de tipul \texttt{UNIQUE} --- în tabela \texttt{BorrowData}, pentru a asigura că nu există mai
         multe înregistrări cu date auxiliare pentru același împrumut
     \end{itemize}
+
+    \section{Capturi de ecran din aplicație împreună cu fragmente din codul care le face funcționale}
+
+    \begin{figure}[H]
+        \includegraphics[width=\linewidth]{Borrowed-Books}
+        \centering
+        \caption{Pagina care îi permite unui utilizator să vadă ce cărți are împrumutate, cu detaliile aferente}
+    \end{figure}
+    \begin{minted}[linenos, breaklines]{rust}
+// În o librărie folosită de aplicația desktop și server
+#[derive(Serialize, Deserialize)] // Permite (de)serializarea structurii
+pub struct BorrowedBook {
+    pub borrow_id: Integer,
+    pub book_id: Integer,
+    pub valid_until: Integer,
+    pub chapters_read: Integer,
+}
+// În aplicația desktop
+// Această funcție este apelată inițial la afișarea paginii, și apoi când utilizatorul apasă butonul de "Reîmprospătare"
+async fn refresh_borrowed_books(&self) {
+    // Comunicația cu serverul
+    let books = self
+        .soup_session()
+        .post::<BorrowedByReply>("", &format!("/borrowed-by/{}", self.cookie().user_id()))
+        .await;
+
+    match books {
+        Ok(books) => {
+            // În cazul de success, actualizez datele, GTK se ocupă automat de actualizarea widgeturilor
+            self.borrowed_books.remove_all();
+            let books = books
+                .into_iter()
+                .map(BoxedAnyObject::new)
+                .collect::<Vec<_>>();
+            self.borrowed_books.extend_from_slice(&books);
+        }
+        Err(err) => {
+            // .. Tratarea erorilor ..
+        }
+    }
+}
+// Pe server
+pub async fn borrowed_by(
+    Path(user_id): Path<i64>,
+    State(pool): State<SqlitePool>,
+) -> Result<Json<BorrowedByReply>, RouteError> {
+    let records = sqlx::query!(
+        r#"
+SELECT d.borrow_id, b.book_id, d.valid_until, d.chapters_read
+FROM Borrows b JOIN BorrowData d ON b.borrow_id = d.borrow_id
+WHERE b.user_id = ?
+    "#,
+        user_id
+    )
+    .fetch_all(&pool)
+    .await
+    .unwrap();
+
+    let data = records
+        .into_iter()
+        .map(|record| BorrowedBook {
+            borrow_id: record.borrow_id,
+            book_id: record.book_id,
+            valid_until: record.valid_until,
+            chapters_read: record.chapters_read,
+        })
+        .collect();
+
+    Ok(Json(data))
+}
+    \end{minted}
+
+    \begin{figure}[H]
+        \includegraphics[width=0.5\linewidth]{New-Book}
+        \centering
+        \caption{Dialogul ce permite editarea sau adăugarea unei cărți noi, în acest caz utilizatorul a deschis dialogul pentru adăugarea unei cărți}
+    \end{figure}
+    \begin{minted}[linenos, breaklines]{rust}
+// În o librărie folosită de aplicația desktop și server
+#[derive(Serialize, Deserialize)]
+pub struct ChangeBookDetailsRequest {
+    pub book_id: Option<Integer>,
+    pub title: Text,
+    pub author_id: Integer,
+    pub publish_date: Integer,
+    pub publisher: Text,
+    pub count: Integer,
+    pub synopsis: Text,
+    pub cookie: session::Cookie,
+}
+
+// În aplicația desktop, o funcție callback atașată butonului "Salvează schimbările"
+async fn on_save_changes_clicked(&self, widget: gtk::Button) {
+    let request = ChangeAuthorDetailsRequest {
+        .. // structura din librărie este construită luând și validând valorile din widget-uri
+    };
+
+    // comunicația efectivă cu serverul
+    let result = librarian_view
+        .soup_session()
+        .post::<()>(request, "/change-author-details")
+        .await;
+
+    // tratarea erorilor
+}
+
+// Pe server
+pub async fn change_book_details(
+    State(pool): State<SqlitePool>,
+    Json(request): Json<ChangeBookDetailsRequest>,
+) -> Result<(), RouteError> {
+    verify_user_is_librarian(&pool, request.cookie).await?;
+    if let Some(book_id) = request.book_id {
+        sqlx::query!("
+UPDATE Books SET title = ?, author_id = ?, publish_date = ?, publisher = ?,
+                 count = ?, synopsis = ?
+WHERE book_id = ?
+        ",
+            request.title, request.author_id, request.publish_date,
+            request.publisher, request.count, request.synopsis, book_id
+        )
+        .execute(&pool)
+        .await
+        .http_internal_error("Failed to update book")?;
+    } else {
+        sqlx::query!(
+            "
+INSERT INTO Books(title, author_id, publish_date, publisher, count, synopsis, language)
+VALUES (?, ?, ?, ?, ?, ?, 'ro')
+        ",
+            request.title, request.author_id, request.publish_date,
+            request.publisher, request.count, request.synopsis,
+        )
+        .execute(&pool)
+        .await
+        .http_internal_error("Failed to insert book")?;
+    }
+    Ok(())
+}
+    \end{minted}
+
+
 
 \end{document}
