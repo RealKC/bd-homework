@@ -13,21 +13,20 @@ template $LibLoginPage : Gtk.Widget {
         [top]
         Adw.HeaderBar {}
 
-        content: Gtk.Paned {
+        content: Gtk.Box {
             orientation: horizontal;
-            shrink-start-child: false;
-            shrink-end-child: false;
+            spacing: 4;
+            homogeneous: true;
             vexpand: true;
 
             Gtk.Frame {
-                width-request: 320;
-
                 Gtk.Box {
                     margin-top: 12;
                     margin-bottom: 12;
                     margin-start: 6;
                     margin-end: 6;
-                    spacing: 6;
+                    spacing: 12;
+                    valign: center;
 
                     orientation: vertical;
 
@@ -37,13 +36,16 @@ template $LibLoginPage : Gtk.Widget {
                         styles ["title-2"]
                     }
 
-                    Adw.EntryRow login_email {
-                        input-purpose: email;
-                        title: "Email";
-                    }
+                    Adw.PreferencesGroup {
+                        valign: center;
+                        Adw.EntryRow login_email {
+                            input-purpose: email;
+                            title: "Email";
+                        }
 
-                    Adw.PasswordEntryRow login_password {
-                        title: "Parolă";
+                        Adw.PasswordEntryRow login_password {
+                            title: "Parolă";
+                        }
                     }
 
                     Gtk.Button {
@@ -56,33 +58,34 @@ template $LibLoginPage : Gtk.Widget {
 
             }
             Gtk.Frame {
-                width-request: 320;
-
                 Gtk.Box {
                     margin-top: 12;
                     margin-bottom: 12;
                     margin-start: 6;
                     margin-end: 6;
                     orientation: vertical;
-                    spacing: 6;
+                    spacing: 12;
+                    valign: center;
 
                     Gtk.Label {
                         label: "Creează cont";
                         styles ["title-2"]
                     }
 
-                    Adw.EntryRow signup_name {
-                        input-purpose: name;
-                        title: "Nume";
-                    }
+                    Adw.PreferencesGroup {
+                        Adw.EntryRow signup_name {
+                            input-purpose: name;
+                            title: "Nume";
+                        }
 
-                    Adw.EntryRow signup_email {
-                        input-purpose: email;
-                        title: "Email";
-                    }
+                        Adw.EntryRow signup_email {
+                            input-purpose: email;
+                            title: "Email";
+                        }
 
-                    Adw.PasswordEntryRow signup_password {
-                        title: "Parolă";
+                        Adw.PasswordEntryRow signup_password {
+                            title: "Parolă";
+                        }
                     }
 
                     Gtk.Button {
