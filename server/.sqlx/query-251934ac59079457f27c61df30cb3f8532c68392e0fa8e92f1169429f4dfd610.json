@@ -1,0 +1,20 @@
+{
+  "db_name": "SQLite",
+  "query": "\nSELECT COUNT(*) as \"count\"\nFROM Borrows\nWHERE book_id = ?;\n    ",
+  "describe": {
+    "columns": [
+      {
+        "name": "count",
+        "ordinal": 0,
+        "type_info": "Int"
+      }
+    ],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "251934ac59079457f27c61df30cb3f8532c68392e0fa8e92f1169429f4dfd610"
+}

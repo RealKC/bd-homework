@@ -313,11 +313,48 @@ WHERE borrow_id = ?
 }
 
 pub async fn delete_book(
-    Path(borrow_id): Path<i64>,
+    Path(book_id): Path<i64>,
     State(pool): State<SqlitePool>,
     Json(cookie): Json<session::Cookie>,
 ) -> Result<(), RouteError> {
     verify_user_is_librarian(&pool, cookie).await?;
+
+    let mut transaction = pool
+        .begin()
+        .await
+        .http_status_error(StatusCode::INTERNAL_SERVER_ERROR)?;
+
+    let borrowed_count = sqlx::query!(
+        r#"
+SELECT COUNT(*) as "count"
+FROM Borrows
+WHERE book_id = ?;
+    "#,
+        book_id
+    )
+    .fetch_one(&mut *transaction)
+    .await
+    .http_internal_error("Failed to delete borrow 2")?;
+
+    if borrowed_count.count > 0 {
+        return Err(RouteError::new_forbidden());
+    }
+
+    sqlx::query!(
+        "
+DELETE FROM Books
+WHERE book_id = ?;
+    ",
+        book_id
+    )
+    .execute(&mut *transaction)
+    .await
+    .http_internal_error("Failed to delete borrow 2")?;
+
+    transaction
+        .commit()
+        .await
+        .http_internal_error("Failed to delete borrow 3")?;
 
     Ok(())
 }
