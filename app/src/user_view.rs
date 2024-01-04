@@ -114,7 +114,8 @@ mod imp {
                     self.all_books.extend_from_slice(&books);
                 }
                 Err(err) => {
-                    self.obj().show_toast_msg("oops");
+                    self.obj()
+                        .show_toast_msg("Obținerea listei de cărți a eșuat");
                     g_warning!("biblioteca", "Failed to fetch books: {err}")
                 }
             }
@@ -136,7 +137,8 @@ mod imp {
                     self.borrowed_books.extend_from_slice(&books);
                 }
                 Err(err) => {
-                    self.obj().show_toast_msg("oops");
+                    self.obj()
+                        .show_toast_msg("Obținerea listei de cărți împrumutate a eșuat");
                     g_warning!("biblioteca", "Failed to fetch books: {err}")
                 }
             }
