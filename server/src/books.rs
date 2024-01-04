@@ -321,3 +321,16 @@ pub async fn delete_book(
 
     Ok(())
 }
+
+pub async fn update_chapters_read(
+    Path(borrow_id): Path<i64>,
+    Query(params): Query<HashMap<String, i64>>,
+    State(pool): State<SqlitePool>,
+    Json(cookie): Json<session::Cookie>,
+) -> Result<(), RouteError> {
+    let Some(value) = params.get("value") else {
+        return Err(RouteError::new_bad_request());
+    };
+
+    Ok(())
+}

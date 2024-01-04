@@ -286,11 +286,34 @@ mod imp {
         fn on_bind_chapters_read(&self, list_item: &gtk::ListItem, _: &gtk::SignalListItemFactory) {
             if let Some(borrowed_book) = list_item.item().and_downcast::<glib::BoxedAnyObject>() {
                 let borrowed_book = borrowed_book.borrow::<BorrowedBook>();
-                list_item
-                    .child()
-                    .and_downcast::<gtk::SpinButton>()
-                    .unwrap()
-                    .set_value(borrowed_book.chapters_read as f64);
+                let spin_button = list_item.child().and_downcast::<gtk::SpinButton>().unwrap();
+                spin_button.set_value(borrowed_book.chapters_read as f64);
+                spin_button.connect_value_changed({
+                    let this = self.obj().clone();
+                    let borrow_id = borrowed_book.borrow_id;
+                    move |spin_button| {
+                        let this = this.clone();
+                        let value = spin_button.value() as i64;
+                        glib::MainContext::default().spawn_local(async move {
+                            this.imp().update_chapters_read(borrow_id, value).await;
+                        });
+                    }
+                });
+            }
+        }
+
+        async fn update_chapters_read(&self, borrow_id: i64, value: i64) {
+            let endpoint = format!("/update-borrow-chapters-read/{borrow_id}?value={value}");
+            if let Err(err) = self
+                .soup_session()
+                .post::<()>(self.cookie().cookie(), &endpoint)
+                .await
+            {
+                self.obj()
+                    .show_toast_msg("Modificarea numărului de capitole citite a eșuat");
+                g_warning!("biblioteca", "Error on POST to {}: {}", endpoint, err);
+            } else {
+                self.refresh_borrowed_books().await;
             }
         }
 
