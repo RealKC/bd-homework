@@ -1,0 +1,91 @@
+using Gtk 4.0;
+using Adw 1;
+
+template $LibEditAuthorDetailsWindow : Adw.Window {
+    resizable: false;
+
+    Gtk.StringList month_list {
+        strings ["ianuarie", "februarie", "martie", "aprilie", "mai", "iunie", "iulie", "august", "septembrie", "octombrie", "noiembrie", "decembrie"]
+    }
+
+    content: Adw.ToolbarView {
+        [top]
+        Adw.HeaderBar {
+            visible: true;
+            show-back-button: false;
+            title-widget: Adw.WindowTitle {
+                title: "Autor nou";
+            };
+        }
+
+        content: Adw.ToastOverlay {
+            Adw.ToastOverlay {
+                Gtk.Box {
+                    orientation: vertical;
+                    spacing: 12;
+                    margin-top: 10;
+                    margin-bottom: 10;
+                    margin-start: 10;
+                    margin-end: 10;
+
+                    Adw.PreferencesGroup {
+                        Adw.EntryRow name_entry {
+                            title: "Nume";
+                        }
+
+                        Adw.EntryRow description_entry {
+                            title: "Informații despre autor";
+                        }
+                    }
+
+                    Adw.PreferencesGroup {
+                        title: "Data nașterii";
+
+                        Adw.EntryRow birth_day_entry {
+                            title: "Ziua";
+                            input-purpose: digits;
+                        }
+
+                        Adw.ComboRow birth_month_entry {
+                            title: "Luna";
+                            model: month_list;
+                        }
+
+                        Adw.EntryRow birth_year_entry {
+                            title: "Anul";
+                            input-purpose: digits;
+                        }
+                    }
+
+                    Adw.PreferencesGroup {
+                        title: "Data decesului";
+                        description: "Introduceți aceste detalii doar dacă autorul este decedat";
+
+                        Adw.EntryRow death_day_entry {
+                            title: "Ziua";
+                            input-purpose: digits;
+                        }
+
+                        Adw.ComboRow death_month_entry {
+                            title: "Luna";
+                            model: month_list;
+                        }
+
+                        Adw.EntryRow death_year_entry {
+                            title: "Anul";
+                            input-purpose: digits;
+                        }
+                    }
+
+                    Gtk.Button {
+                        label: "Salvează schimbările";
+                        styles ["suggested-action"]
+
+                        clicked => $on_save_changes_clicked() swapped;
+                    }
+                }
+
+            }
+        };
+    };
+}

@@ -36,6 +36,7 @@ mod imp {
 
     use crate::{
         confirmation_dialog::ConfirmationDialogBuilder,
+        edit_author_details::EditAuthorDetailsWindow,
         edit_book_details::EditBookDetailsWindow,
         http::{Error, Session, SessionCookie},
         time,
@@ -225,7 +226,9 @@ mod imp {
         }
 
         #[template_callback]
-        fn on_new_author_clicked(&self, _: gtk::Button) {}
+        fn on_new_author_clicked(&self, _: gtk::Button) {
+            EditAuthorDetailsWindow::new(self.obj().clone()).present();
+        }
 
         #[template_callback]
         fn on_bind_title(&self, list_item: &gtk::ListItem, _: &gtk::SignalListItemFactory) {
