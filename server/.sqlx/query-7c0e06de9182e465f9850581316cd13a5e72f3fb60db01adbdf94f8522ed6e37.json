@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\nDELETE FROM BorrowData\nWHERE borrow_id = ?;\n    ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 1
+    },
+    "nullable": []
+  },
+  "hash": "7c0e06de9182e465f9850581316cd13a5e72f3fb60db01adbdf94f8522ed6e37"
+}

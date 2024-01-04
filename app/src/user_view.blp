@@ -157,6 +157,20 @@ template $LibUserView : Gtk.Widget {
                                     bind => $on_bind_date() swapped;
                                 };
                             }
+
+                            Gtk.ColumnViewColumn {
+                                resizable: false;
+                                factory: Gtk.BuilderListItemFactory {
+                                    template ListItem {
+                                        child: Gtk.Button {
+                                            label: "Înapoiază";
+                                            styles ["suggested-action"]
+
+                                            clicked => $on_return_book_clicked();
+                                        };
+                                    }
+                                };
+                            }
                         }
                     };
                 }

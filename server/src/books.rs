@@ -413,3 +413,43 @@ VALUES(?, ?, ?, ?)
 
     Ok(())
 }
+
+pub async fn return_book(
+    Path(borrow_id): Path<i64>,
+    State(pool): State<SqlitePool>,
+    Json(_): Json<session::Cookie>,
+) -> Result<(), RouteError> {
+    let mut transaction = pool
+        .begin()
+        .await
+        .http_internal_error("Failed to start transaction")?;
+
+    sqlx::query!(
+        "
+DELETE FROM BorrowData
+WHERE borrow_id = ?;
+    ",
+        borrow_id
+    )
+    .execute(&mut *transaction)
+    .await
+    .http_internal_error("Failed to delete data")?;
+
+    sqlx::query!(
+        "
+DELETE FROM Borrows
+WHERE borrow_id = ?;
+    ",
+        borrow_id
+    )
+    .execute(&mut *transaction)
+    .await
+    .http_internal_error("Failed to delete Borrow")?;
+
+    transaction
+        .commit()
+        .await
+        .http_internal_error("Failed to commit")?;
+
+    Ok(())
+}

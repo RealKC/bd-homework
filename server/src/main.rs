@@ -47,6 +47,7 @@ async fn main() {
             "/update-borrow-chapters-read/:borrow_id",
             post(books::update_chapters_read),
         )
+        .route("/return-book/:borrow_id", post(books::return_book))
         .nest("/auth", auth::router(pool.clone()))
         .fallback(fallback)
         .with_state(pool);

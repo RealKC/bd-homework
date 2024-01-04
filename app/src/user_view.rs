@@ -26,6 +26,7 @@ mod imp {
     use crate::{
         book_details::BookDetailsWindow,
         http::{Session, SessionCookie},
+        widget_ext::WidgetUtilsExt,
         window::ShowToastExt,
     };
 
@@ -327,6 +328,37 @@ mod imp {
                     .and_downcast::<gtk::Label>()
                     .unwrap()
                     .set_label(&return_on.format("%d %B %Y").unwrap());
+            }
+        }
+
+        #[template_callback]
+        async fn on_return_book_clicked(button: gtk::Button, list_item: gtk::ListItem) {
+            let Some(user_view) = button.parent_of_type::<super::UserView>() else {
+                g_warning!(
+                    "biblioteca",
+                    "No UserView on top of this Button: {}",
+                    button
+                );
+                return;
+            };
+
+            let Some(object) = list_item.item().and_downcast::<glib::BoxedAnyObject>() else {
+                g_warning!("biblioteca", "ListItem didn't have a BoxedAnyObject item");
+                return;
+            };
+
+            let endpoint = format!("/return-book/{}", object.borrow::<BorrowedBook>().borrow_id);
+            let result = user_view
+                .imp()
+                .soup_session()
+                .post::<()>(user_view.imp().cookie().cookie().clone(), &endpoint)
+                .await;
+
+            if let Err(error) = result {
+                button.show_toast_msg("Înapoierea cărții a eșuat");
+                g_warning!("biblioteca", "Error is: {}", error);
+            } else {
+                user_view.imp().refresh_borrowed_books().await;
             }
         }
     }
