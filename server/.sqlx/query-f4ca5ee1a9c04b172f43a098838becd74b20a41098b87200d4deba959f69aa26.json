@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\nUPDATE BorrowData\nSET chapters_read = ?\nWHERE borrow_id = ?\n    ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "f4ca5ee1a9c04b172f43a098838becd74b20a41098b87200d4deba959f69aa26"
+}

@@ -326,11 +326,24 @@ pub async fn update_chapters_read(
     Path(borrow_id): Path<i64>,
     Query(params): Query<HashMap<String, i64>>,
     State(pool): State<SqlitePool>,
-    Json(cookie): Json<session::Cookie>,
+    Json(_): Json<session::Cookie>,
 ) -> Result<(), RouteError> {
     let Some(value) = params.get("value") else {
         return Err(RouteError::new_bad_request());
     };
+
+    sqlx::query!(
+        "
+UPDATE BorrowData
+SET chapters_read = ?
+WHERE borrow_id = ?
+    ",
+        value,
+        borrow_id
+    )
+    .execute(&pool)
+    .await
+    .http_internal_error("Failed to update chapters read")?;
 
     Ok(())
 }
