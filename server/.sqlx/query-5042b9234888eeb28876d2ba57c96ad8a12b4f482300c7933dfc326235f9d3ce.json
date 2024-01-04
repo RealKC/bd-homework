@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\nUPDATE BorrowData\nSET valid_until = unixepoch(valid_until, 'unixepoch', '+' || ? || ' days')\nWHERE borrow_id = ?\n    ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 2
+    },
+    "nullable": []
+  },
+  "hash": "5042b9234888eeb28876d2ba57c96ad8a12b4f482300c7933dfc326235f9d3ce"
+}

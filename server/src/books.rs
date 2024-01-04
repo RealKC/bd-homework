@@ -9,7 +9,7 @@ use chrono::{Days, Local};
 use schema::{
     books::{
         Author, Book, Borrow, BorrowReply, BorrowRequest, BorrowedBook, BorrowedByReply,
-        BorrowsReply, BorrowsRequest, ChangeBookDetailsRequest,
+        BorrowsReply, BorrowsRequest, ChangeAuthorDetailsRequest, ChangeBookDetailsRequest,
     },
     session,
 };
@@ -331,6 +331,35 @@ pub async fn update_chapters_read(
     let Some(value) = params.get("value") else {
         return Err(RouteError::new_bad_request());
     };
+
+    Ok(())
+}
+
+pub async fn change_author_details(
+    State(pool): State<SqlitePool>,
+    Json(request): Json<ChangeAuthorDetailsRequest>,
+) -> Result<(), RouteError> {
+    verify_user_is_librarian(&pool, request.cookie.clone()).await?;
+
+    tracing::info!("Going to add a new author: {request:?}");
+
+    if request.author_id.is_some() {
+        return Err(RouteError::new_bad_request());
+    }
+
+    sqlx::query!(
+        r#"
+INSERT INTO Authors(name, date_of_birth, date_of_death, description)
+VALUES(?, ?, ?, ?)
+    "#,
+        request.name,
+        request.date_of_birth,
+        request.date_of_death,
+        request.description
+    )
+    .execute(&pool)
+    .await
+    .http_internal_error("Failed to add author")?;
 
     Ok(())
 }

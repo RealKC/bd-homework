@@ -70,3 +70,13 @@ pub struct ChangeBookDetailsRequest {
     pub synopsis: Text,
     pub cookie: session::Cookie,
 }
+
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct ChangeAuthorDetailsRequest {
+    pub author_id: Option<Integer>,
+    pub name: Text,
+    pub date_of_birth: Integer,
+    pub date_of_death: Option<Integer>,
+    pub description: Text,
+    pub cookie: session::Cookie,
+}

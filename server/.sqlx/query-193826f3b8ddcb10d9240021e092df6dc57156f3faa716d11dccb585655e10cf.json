@@ -1,0 +1,38 @@
+{
+  "db_name": "SQLite",
+  "query": "\nSELECT b.borrow_id, b.book_id, b.user_id, d.valid_until\nFROM Borrows b JOIN BorrowData d ON b.borrow_id = d.borrow_id;\n    ",
+  "describe": {
+    "columns": [
+      {
+        "name": "borrow_id",
+        "ordinal": 0,
+        "type_info": "Int64"
+      },
+      {
+        "name": "book_id",
+        "ordinal": 1,
+        "type_info": "Int64"
+      },
+      {
+        "name": "user_id",
+        "ordinal": 2,
+        "type_info": "Int64"
+      },
+      {
+        "name": "valid_until",
+        "ordinal": 3,
+        "type_info": "Int64"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "193826f3b8ddcb10d9240021e092df6dc57156f3faa716d11dccb585655e10cf"
+}

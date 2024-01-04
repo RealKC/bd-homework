@@ -1,0 +1,26 @@
+{
+  "db_name": "SQLite",
+  "query": "\nSELECT author_id, name\nFROM Authors;\n    ",
+  "describe": {
+    "columns": [
+      {
+        "name": "author_id",
+        "ordinal": 0,
+        "type_info": "Int64"
+      },
+      {
+        "name": "name",
+        "ordinal": 1,
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Right": 0
+    },
+    "nullable": [
+      false,
+      false
+    ]
+  },
+  "hash": "cf163763b3451eb2cc62d289ef45abc8d097aaa01e6176007d57a098bc19520d"
+}

@@ -35,6 +35,7 @@ async fn main() {
         .route("/borrow", post(books::borrow))
         .route("/borrows", post(books::borrows))
         .route("/borrowed-by/:user_id", post(books::borrowed_by))
+        .route("/change-author-details", post(books::change_author_details))
         .route("/change-book-details", post(books::change_book_details))
         .route("/delete-book/:book_id", post(books::delete_book))
         .route(

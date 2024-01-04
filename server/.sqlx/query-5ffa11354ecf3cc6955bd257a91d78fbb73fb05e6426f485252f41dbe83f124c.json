@@ -1,0 +1,12 @@
+{
+  "db_name": "SQLite",
+  "query": "\nINSERT INTO Authors(name, date_of_birth, date_of_death, description)\nVALUES(?, ?, ?, ?)\n    ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Right": 4
+    },
+    "nullable": []
+  },
+  "hash": "5ffa11354ecf3cc6955bd257a91d78fbb73fb05e6426f485252f41dbe83f124c"
+}
